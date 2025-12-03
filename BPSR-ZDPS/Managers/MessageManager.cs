@@ -1035,6 +1035,7 @@ namespace BPSR_ZDPS
                 System.Diagnostics.Debug.WriteLine($"ProcessSyncContainerData.SceneData:\n{sceneData}");
 
                 EncounterManager.SetSceneId(sceneData.LevelMapId);
+                EncounterManager.Current.SetChannelLineNumber(sceneData.LineId);
             }
 
             if (vData.Equip != null)
