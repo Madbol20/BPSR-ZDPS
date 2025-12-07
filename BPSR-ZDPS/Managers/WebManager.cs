@@ -5,6 +5,7 @@ using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
 using System.IO.Hashing;
 using System.Net.Http.Headers;
+using System.Net.Http.Json;
 using System.Net.ServerSentEvents;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -72,6 +73,25 @@ namespace BPSR_ZDPS.Web
             catch (Exception ex)
             {
                 Log.Error(ex, "SubmitReportToWebhook Error");
+            }
+        }
+
+        public static async Task<bool> CanSubmitEncounterReport(Encounter encounter)
+        {
+            try
+            {
+                var teamId = Utils.CreateZTeamId(encounter);
+
+                var url = $"{Settings.Instance.WebhookReportsDeduplicationServerUrl}/dedupecheck/{teamId}";
+                var result = await HttpClient.GetAsync(url);
+                var dedupeResp = await result.Content.ReadFromJsonAsync<DedupeResp>();
+
+                return dedupeResp.CanSend;
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "Error checking to see if could submit report.");
+                return false;
             }
         }
 

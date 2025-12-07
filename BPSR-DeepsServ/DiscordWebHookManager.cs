@@ -1,4 +1,5 @@
 ﻿using BPSR_DeepsServ.Models;
+using Microsoft.Extensions.Options;
 using System.Collections.Concurrent;
 using System.IO.Hashing;
 using System.Net;
@@ -8,11 +9,8 @@ using System.Text;
 
 namespace BPSR_DeepsServ
 {
-    public class DiscordWebHookManager
+    public class DiscordWebHookManager(IOptions<Settings> settings) : DedupeManager(settings)
     {
-        private static TimeSpan DupeWindowDuration = TimeSpan.FromSeconds(10);
-
-        private ConcurrentDictionary<ulong, ReportTeamState> ReportDedupeData = [];
         private readonly HttpClient HttpClient = new ();
 
         public async Task<HttpResponseMessage> ProcessEncounterReport(string id, string token, ulong teamId, string payload, IFormFileCollection files)
@@ -31,21 +29,9 @@ namespace BPSR_DeepsServ
         private bool IsDupe(string discordId, string discordToken, ulong teamId)
         {
             var id = CreateTeamHookReportId(discordId, discordToken, teamId);
-            if (ReportDedupeData.TryGetValue(id, out var data))
-            {
-                if ((data.ReportedAt + DupeWindowDuration) <= DateTime.Now)
-                {
-                    ReportDedupeData[id] = new ReportTeamState(DateTime.Now);
-                    return false;
-                }
-                else
-                {
-                    return true;
-                }
-            }
+            var isDupe = IsDupe(id);
 
-            ReportDedupeData[id] = new ReportTeamState(DateTime.Now);
-            return false;
+            return isDupe;
         }
 
         private ulong CreateTeamHookReportId(string id, string token, ulong teamId)
