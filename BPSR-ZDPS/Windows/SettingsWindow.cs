@@ -708,6 +708,9 @@ namespace BPSR_ZDPS.Windows
                             case EWebhookReportsMode.Custom:
                                 reportsModeName = "Custom URL";
                                 break;
+                            case EWebhookReportsMode.FallbackDiscordDeduplication:
+                                reportsModeName = "Fallback Discord Deduplication";
+                                break;
                         }
 
                         if (ImGui.BeginCombo("##WebhookMode", $"{reportsModeName}", ImGuiComboFlags.None))
@@ -716,7 +719,7 @@ namespace BPSR_ZDPS.Windows
                             {
                                 webhookReportsMode = EWebhookReportsMode.DiscordDeduplication;
                             }
-                            ImGui.SetItemTooltip("Send to a Discord Webhook after using a ZDPS Server to check if the same report was sent already within a short timeframe.");
+                            ImGui.SetItemTooltip("Send to a Discord Webhook after using an External Server to check if the same report was sent already within a short timeframe.");
                             if (ImGui.Selectable("Discord Webhook"))
                             {
                                 webhookReportsMode = EWebhookReportsMode.Discord;
@@ -727,6 +730,11 @@ namespace BPSR_ZDPS.Windows
                                 webhookReportsMode = EWebhookReportsMode.Custom;
                             }
                             ImGui.SetItemTooltip("Send directly to a custom URL of your choice.");
+                            if (ImGui.Selectable("Fallback Discord Deduplication"))
+                            {
+                                webhookReportsMode = EWebhookReportsMode.FallbackDiscordDeduplication;
+                            }
+                            ImGui.SetItemTooltip("Have an External Server forward to a Discord Webhook after using the External Server to check if the same report was sent already within a short timeframe.");
                             ImGui.EndCombo();
                         }
                         ImGui.Indent();

@@ -186,7 +186,7 @@ namespace BPSR_ZDPS
 
                 RenderWindowList();
                 //ImGui.ShowDemoWindow();
-                ImPlot.ShowDemoWindow();
+                //ImPlot.ShowDemoWindow();
 
                 ImGui.Render();
                 ImGui.EndFrame();

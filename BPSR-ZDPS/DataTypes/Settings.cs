@@ -94,7 +94,8 @@ public enum EWebhookReportsMode
 {
     DiscordDeduplication,
     Discord,
-    Custom
+    Custom,
+    FallbackDiscordDeduplication,
 }
 
 public class SettingsExternal
