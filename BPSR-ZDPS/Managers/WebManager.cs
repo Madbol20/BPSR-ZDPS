@@ -96,7 +96,7 @@ namespace BPSR_ZDPS.Web
         {
             try
             {
-                var url = $"{Settings.Instance.WebhookReportsDeduplicationServerHost}/dedupecheck/{id}/{teamId}";
+                var url = $"{Settings.Instance.WebhookReportsDeduplicationServerHost}/dedupecheck/{id}/{teamId}?uuid={AppState.PlayerUUID}";
                 var result = await HttpClient.GetAsync(url);
                 var dedupeResp = await result.Content.ReadFromJsonAsync<DedupeResp>();
 
