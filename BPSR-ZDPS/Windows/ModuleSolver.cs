@@ -144,7 +144,7 @@ namespace BPSR_ZDPS
                     {
                         if (ImGui.BeginTable("settings_table", 2, ImGuiTableFlags.BordersInnerV | ImGuiTableFlags.PadOuterX | ImGuiTableFlags.BordersInnerH))
                         {
-                            ImGui.TableSetupColumn("Label", ImGuiTableColumnFlags.WidthFixed, 150f);
+                            ImGui.TableSetupColumn("Label", ImGuiTableColumnFlags.WidthFixed, 200f);
                             ImGui.TableSetupColumn("Value", ImGuiTableColumnFlags.WidthStretch);
 
                             AddSettingRow("Preset Share Code: ", () => {
@@ -173,6 +173,14 @@ namespace BPSR_ZDPS
                                 ImGui.Combo("##SolverMode", ref selectedSolver, solverNames, 3);
                                 Settings.Instance.WindowSettings.ModuleWindow.SolverMode = (SolverModes)selectedSolver;
                             });
+
+                            AddSettingRow("Include All Stats In Scoring:", () =>
+                            {
+                                var val = Settings.Instance.WindowSettings.ModuleWindow.LastUsedPreset.Config.ValueAllStats;
+                                ImGui.Checkbox("##ValueAllStats", ref val);
+                                Settings.Instance.WindowSettings.ModuleWindow.LastUsedPreset.Config.ValueAllStats = val;
+                            });
+
                             ImGui.EndTable();
                         }
 
@@ -200,12 +208,12 @@ namespace BPSR_ZDPS
                                     for (int i = 0; i < 6; i++)
                                     {
                                         ImGui.TableNextColumn();
-                                        ImGui.TextUnformatted($"Link {i + 1}: ");
+                                        ImGui.TextUnformatted($"Level {i + 1}: ");
                                         ImGui.TableNextColumn();
                                         int val = Settings.Instance.WindowSettings.ModuleWindow.LastUsedPreset.Config.LinkLevelBonus[i];
                                         //ImGui.SetNextItemWidth(100);
                                         ImGui.InputInt($"##LinkLevelBoost{i}", ref val, 0);
-                                        val = Math.Clamp(val, 0, 500);
+                                        val = Math.Clamp(val, 0, 250);
                                         Settings.Instance.WindowSettings.ModuleWindow.LastUsedPreset.Config.LinkLevelBonus[i] = (byte)val;
                                     }
 
@@ -214,7 +222,7 @@ namespace BPSR_ZDPS
                                 ImGui.TableNextColumn();
                                 ImGui.SeparatorText("Link Level Boost Description");
                                 ImGui.TextWrapped("Set the bonus points awarded to a module combination when its Link Level matches or exceeds the given value.\n" +
-                                    $"eg. A combo that has 'Crit Focus' at +16 would have a link level of '5' and get a points boost of {Settings.Instance.WindowSettings.ModuleWindow.LastUsedPreset.Config.LinkLevelBonus[4]} ");
+                                    $"Ex: A module combination that has 'Crit Focus' at +16 would have a Link Level of '5' and get a points boost of {Settings.Instance.WindowSettings.ModuleWindow.LastUsedPreset.Config.LinkLevelBonus[4]}.");
 
                                 ImGui.EndTable();
                             }
@@ -311,7 +319,7 @@ namespace BPSR_ZDPS
             ImGui.Spacing();
 
             int idToRemove = -1;
-            for (int i = 0; i < SolverConfig.StatPrioritys.Count; i++)
+            for (int i = 0; i < SolverConfig.StatPriorities.Count; i++)
             {
                 var result = DrawStatFilter(i);
                 if (result.Item1)
@@ -328,7 +336,7 @@ namespace BPSR_ZDPS
 
             if (idToRemove != -1)
             {
-                SolverConfig.StatPrioritys.RemoveAt(idToRemove);
+                SolverConfig.StatPriorities.RemoveAt(idToRemove);
             }
 
             ImGui.EndChild();
@@ -337,7 +345,7 @@ namespace BPSR_ZDPS
             ImGui.SetNextItemWidth(leftWidth - 55);
             if (ImGui.BeginCombo("##Stat", $"       {PendingStatToAdd.Name}"))
             {
-                foreach (var item in ModStatInfos.AsValueEnumerable().Where(x => !SolverConfig.StatPrioritys.Any(y => y.Id == x.Key)))
+                foreach (var item in ModStatInfos.AsValueEnumerable().Where(x => !SolverConfig.StatPriorities.Any(y => y.Id == x.Key)))
                 {
                     //ImGui.BeginGroup();
                     ImGui.Image(item.Value.IconRef.Value, new Vector2(22, 22));
@@ -356,11 +364,11 @@ namespace BPSR_ZDPS
             ImGui.Image(PendingStatToAdd.IconRef.Value, new Vector2(22, 22));
 
             ImGui.SetCursorPos(pos + new Vector2(leftWidth - 50, 0));
-            var isAlreadyAdded = SolverConfig.StatPrioritys.Any(x => x.Id == PendingStatToAdd.StatId);
-            ImGui.BeginDisabled(isAlreadyAdded || SolverConfig.StatPrioritys.Count >= 7);
+            var isAlreadyAdded = SolverConfig.StatPriorities.Any(x => x.Id == PendingStatToAdd.StatId);
+            ImGui.BeginDisabled(isAlreadyAdded || SolverConfig.StatPriorities.Count >= 7);
             if (ImGui.Button("Add", new Vector2(50, 0)))
             {
-                SolverConfig.StatPrioritys.Add(new StatPrio()
+                SolverConfig.StatPriorities.Add(new StatPrio()
                 {
                     Id = PendingStatToAdd.StatId,
                     MinLevel = 0
@@ -399,9 +407,10 @@ namespace BPSR_ZDPS
                         lock (FilteredModules)
                         {
                             bool[] resultsOpenStates = new bool[BestModResults.Count];
-                            resultsOpenStates[0] = true;
                             for (int i = 0; i < BestModResults.Count; i++)
                             {
+                                resultsOpenStates[i] = i <= 1;
+
                                 ModComboResult modsResult = BestModResults[i];
                                 if (ImGui.CollapsingHeader($"Result: {i + 1} (ZScore: {modsResult.Score})", (resultsOpenStates[i] ? ImGuiTreeNodeFlags.DefaultOpen : ImGuiTreeNodeFlags.None)))
                                 {
@@ -450,7 +459,7 @@ namespace BPSR_ZDPS
         private static (bool, bool) DrawStatFilter(int i)
         {
             var pos = ImGui.GetCursorPos();
-            var statInfo = SolverConfig.StatPrioritys[i];
+            var statInfo = SolverConfig.StatPriorities[i];
             bool shouldRemove = false;
             bool wasChanged = false;
 
@@ -460,26 +469,26 @@ namespace BPSR_ZDPS
             if (ImGui.Button($"{FASIcons.AngleUp}##{i}", new Vector2(32, 16)))
             {
                 var toMoveTo = i - 1;
-                var tempStat = SolverConfig.StatPrioritys[toMoveTo];
-                SolverConfig.StatPrioritys[toMoveTo] = SolverConfig.StatPrioritys[i];
-                SolverConfig.StatPrioritys[i] = tempStat;
+                var tempStat = SolverConfig.StatPriorities[toMoveTo];
+                SolverConfig.StatPriorities[toMoveTo] = SolverConfig.StatPriorities[i];
+                SolverConfig.StatPriorities[i] = tempStat;
                 wasChanged = true;
             }
             ImGui.EndDisabled();
 
-            ImGui.BeginDisabled(i == SolverConfig.StatPrioritys.Count() - 1);
+            ImGui.BeginDisabled(i == SolverConfig.StatPriorities.Count() - 1);
             if (ImGui.Button($"{FASIcons.AngleDown}##{i}", new Vector2(32, 16)))
             {
                 var toMoveTo = i + 1;
-                var tempStat = SolverConfig.StatPrioritys[toMoveTo];
-                SolverConfig.StatPrioritys[toMoveTo] = SolverConfig.StatPrioritys[i];
-                SolverConfig.StatPrioritys[i] = tempStat;
+                var tempStat = SolverConfig.StatPriorities[toMoveTo];
+                SolverConfig.StatPriorities[toMoveTo] = SolverConfig.StatPriorities[i];
+                SolverConfig.StatPriorities[i] = tempStat;
                 wasChanged = true;
             }
             ImGui.EndDisabled();
             ImGui.PopFont();
 
-            var stat = ModStatInfos[SolverConfig.StatPrioritys[i].Id];
+            var stat = ModStatInfos[SolverConfig.StatPriorities[i].Id];
             ImGui.SetCursorPos(pos + new Vector2(40, 4));
             ImGui.Image(stat.IconRef.Value, new Vector2(32, 32));
 
@@ -491,11 +500,11 @@ namespace BPSR_ZDPS
             var availSize = ImGui.GetContentRegionAvail();
             ImGui.SetCursorPos(pos + new Vector2(availSize.X - 70, 5));
             ImGui.SetNextItemWidth(40);
-            if (ImGui.InputInt($"##MinLevel{i}", ref SolverConfig.StatPrioritys[i].MinLevel, 0))
+            if (ImGui.InputInt($"##MinLevel{i}", ref SolverConfig.StatPriorities[i].MinLevel, 0, ImGuiInputTextFlags.CharsDecimal))
             {
                 wasChanged = true;
             }
-            ImGui.SetItemTooltip("The minimum link value needed for this stat to be considered.\nLeave 0 to use any level.");
+            ImGui.SetItemTooltip("The minimum Link value needed for this stat to be considered.\nLeave 0 to use any Link.");
 
             ImGui.SetCursorPos(pos + new Vector2(availSize.X - 25, 0));
             ImGui.PushFont(HelperMethods.Fonts["FASIcons"], 13.0f);

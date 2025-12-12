@@ -5,17 +5,18 @@ namespace BPSR_ZDPS.DataTypes.Modules
     public class SolverConfig
     {
         public Dictionary<int, bool> QualitiesV2 = new Dictionary<int, bool>() { { 2, false }, { 3, true }, { 4, true } };
-        public List<StatPrio> StatPrioritys = [];
-        public byte[] LinkLevelBonus = [1,2,3,4,8,12];
+        public List<StatPrio> StatPriorities = [];
+        public byte[] LinkLevelBonus = [1,2,4,8,16,32];
+        public bool ValueAllStats = true;
 
         public string SaveToString(bool asBase64 = false)
         {
             var sb = new StringBuilder();
             sb.Append("ZMO:");
-            for (int i = 0; i < StatPrioritys.Count; i++)
+            for (int i = 0; i < StatPriorities.Count; i++)
             {
-                var stat = $"{StatPrioritys[i].Id}-{StatPrioritys[i].MinLevel}";
-                sb.Append($"{stat}{(StatPrioritys.Count - 1 == i ? "" : ",")}");
+                var stat = $"{StatPriorities[i].Id}-{StatPriorities[i].MinLevel}";
+                sb.Append($"{stat}{(StatPriorities.Count - 1 == i ? "" : ",")}");
             }
 
             sb.Append("|");
@@ -39,8 +40,8 @@ namespace BPSR_ZDPS.DataTypes.Modules
             {
                 if (str.StartsWith("ZMO:"))
                 {
-                    QualitiesV2.Clear();
-                    StatPrioritys.Clear();
+                    //QualitiesV2.Clear();
+                    StatPriorities.Clear();
 
                     var configParts = str.Substring(4).Split('|');
                     if (configParts.Length > 1)
@@ -55,11 +56,11 @@ namespace BPSR_ZDPS.DataTypes.Modules
                                 MinLevel = int.Parse(statParts[1])
                             };
 
-                            StatPrioritys.Add(prio);
+                            StatPriorities.Add(prio);
                         }
                     }
 
-                    StatPrioritys = StatPrioritys.Take(8).ToList();
+                    StatPriorities = StatPriorities.Take(8).ToList();
                 }
             }
             catch (Exception ex)

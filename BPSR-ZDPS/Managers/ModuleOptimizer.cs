@@ -1,5 +1,6 @@
 ﻿using BPSR_ZDPS.DataTypes.Modules;
 using Serilog;
+using System.Configuration;
 using System.Diagnostics;
 using System.Numerics;
 using ZLinq;
@@ -166,7 +167,7 @@ namespace BPSR_ZDPS.Managers
             Parallel.For(0, numMods - 3, i =>
             {
                 ModComboResult[] topBest = new ModComboResult[10];
-                var statLimits = config.StatPrioritys.ToDictionary(x => x.Id, y => y.MinLevel);
+                var statLimits = config.StatPriorities.ToDictionary(x => x.Id, y => y.MinLevel);
 
                 for (int j = i + 1; j < numMods - 2; j++)
                 {
@@ -318,7 +319,7 @@ namespace BPSR_ZDPS.Managers
 
             var statMins = new byte[vecCount];
             var statMask = new byte[vecCount];
-            foreach (var statPrio in config.StatPrioritys)
+            foreach (var statPrio in config.StatPriorities)
             {
                 if (possableStats.TryGetValue(statPrio.Id, out var idx))
                 {
@@ -460,7 +461,7 @@ namespace BPSR_ZDPS.Managers
                 var qualityValue = Math.Clamp(item.Value.Quality, 0, 4);
                 if (config.QualitiesV2.TryGetValue(qualityValue, out var quality) ? quality : false)
                 {
-                    if (item.Value.ModNewAttr.ModParts.Any(x => config.StatPrioritys.Any(y => y.Id == x)))
+                    if (item.Value.ModNewAttr.ModParts.Any(x => config.StatPriorities.Any(y => y.Id == x)))
                     {
                         modules.Add(item.Key);
                     }
@@ -472,15 +473,15 @@ namespace BPSR_ZDPS.Managers
 
         private ushort GetStatMultiplier(SolverConfig config, int statId)
         {
-            for (int i = 0; i < config.StatPrioritys.Count; i++)
+            for (int i = 0; i < config.StatPriorities.Count; i++)
             {
-                if (config.StatPrioritys[i].Id == statId)
+                if (config.StatPriorities[i].Id == statId)
                 {
-                    return (ushort)((config.StatPrioritys.Count - i) + 1);
+                    return (ushort)((config.StatPriorities.Count - i) + 1);
                 }
             }
 
-            return 0;
+            return (ushort)(config.ValueAllStats ? 1 : 0);
         }
 
         private ushort CalcModuleScore(SolverConfig config, PlayerModDataSave playerMods, long id)
