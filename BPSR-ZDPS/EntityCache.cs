@@ -108,6 +108,7 @@ namespace BPSR_ZDPS
             }
         }
 
+        private CancellationTokenSource SaveCTS = new CancellationTokenSource();
         public void Save(bool force = false)
         {
             if (force)
@@ -141,10 +142,39 @@ namespace BPSR_ZDPS
                     SaveTask = Task.Factory.StartNew(async () =>
                     {
                         await Task.Delay(BufferDelay);
-                        Save(true);
+                        if (!SaveCTS.IsCancellationRequested)
+                        {
+                            Save(true);
+                        }
                         SaveTask = null;
-                    });
+                    }, SaveCTS.Token);
                 }
+            }
+        }
+
+        public void FinalSave()
+        {
+            try
+            {
+                SaveCTS.Cancel();
+                if (SaveTask != null)
+                {
+                    SaveTask.Wait();
+                }
+                SaveCTS.TryReset();
+
+                using (FileStream fs = new FileStream(FilePath, FileMode.OpenOrCreate, FileAccess.Write, FileShare.Read))
+                {
+                    using (StreamWriter file = new StreamWriter(fs))
+                    {
+                        JsonSerializer serializer = new();
+                        serializer.Serialize(file, Cache);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Serilog.Log.Error($"Error writing EntityCache file:\n{ex.Message}\nStack Trace:\n{ex.StackTrace}");
             }
         }
 

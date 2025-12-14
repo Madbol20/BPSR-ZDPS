@@ -37,6 +37,14 @@ namespace BPSR_ZDPS
             DBSchema.CreateTables(DbConn);
         }
 
+        public static void CloseAndSave()
+        {
+            if (DbConn != null)
+            {
+                DbConn.Close();
+            }
+        }
+
         // Encounters
         public static ulong GetNextEncounterId()
         {

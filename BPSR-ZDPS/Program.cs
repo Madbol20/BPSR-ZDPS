@@ -229,12 +229,14 @@ namespace BPSR_ZDPS
                 }
             }
 
+            DB.CloseAndSave();
             Settings.Save();
             MessageManager.StopCapturing();
 
             HotKeyManager.UnregisterAllHotKeys();
             //HotKeyManager.UnregisterHookProc();
 
+            EntityCache.Instance.FinalSave();
             System.Diagnostics.Stopwatch writingTimeout = new();
             writingTimeout.Start();
             while (EntityCache.Instance.IsWritingFile)
