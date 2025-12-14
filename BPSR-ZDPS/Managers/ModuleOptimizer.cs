@@ -29,7 +29,7 @@ namespace BPSR_ZDPS.Managers
                 result = NewFast(config, playerMods, sw, filtered);
             }
 
-                Log.Information($"Combos took: {sw.Elapsed}");
+            Log.Information($"Combos took: {sw.Elapsed}");
 
             return result;
         }
@@ -375,7 +375,7 @@ namespace BPSR_ZDPS.Managers
                             var sumsMined = Vector.Min(sums, statCap);
                             var statIsGreaterThan = Vector.GreaterThan<byte>(sumsMined, statMinsVec);
                             var passedMinValues = Vector.ConditionalSelect(statIsGreaterThan, sumsMined, new Vector<byte>(0));
-                            var multied = passedMinValues * modStatMultplier;
+                            //var multied = passedMinValues * modStatMultplier;
 
                             int breakPointBonus = 0;
                             var breakPointValues = passedMinValues;
@@ -385,7 +385,7 @@ namespace BPSR_ZDPS.Managers
                                 breakPointBonus += val;
                             }
 
-                            int score = Vector.Sum(multied) + breakPointBonus;
+                            int score = Vector.Sum(sums) + breakPointBonus;
 
                             for (int bestIdx = 0; bestIdx < topBest.Length; bestIdx++)
                             {

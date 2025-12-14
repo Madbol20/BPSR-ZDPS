@@ -58,5 +58,9 @@ namespace BPSR_ZDPS
         public static Vector4 Magenta = new Vector4(1.00000f, 0.0f, 1.00000f, 1.0f);
         public static Vector4 Magenta_Transparent = new Vector4(1.00000f, 0.0f, 1.00000f, 0.75f);
         public static Vector4 DarkMagenta = new Vector4(0.54510f, 0.0f, 0.54510f, 1.0f);
+
+        public static Vector4 QualityBasic = new Vector4(0.612f, 0.725f, 0.937f, 1.0f);
+        public static Vector4 QualityAdvanced = new Vector4(0.69f, 0.57f, 0.93f, 1.0f);
+        public static Vector4 QualityExcellent = new Vector4(0.96f, 0.84f, 0.16f, 1.0f);
     }
 }

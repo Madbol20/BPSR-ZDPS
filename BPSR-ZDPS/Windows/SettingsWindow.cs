@@ -737,6 +737,11 @@ namespace BPSR_ZDPS.Windows
                         ImGui.EndDisabled();
                         ImGui.Unindent();
 
+                        if (ImGui.Button("Reload Module Save"))
+                        {
+                            ModuleSolver.Init();
+                        }
+
                         ShowRestartRequiredNotice(Settings.Instance.LogToFile != logToFile, "Write Debug Log To File");
                         ImGui.AlignTextToFramePadding();
                         ImGui.Text("Write Debug Log To File: ");

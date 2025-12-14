@@ -285,7 +285,9 @@ namespace BPSR_ZDPS
 
             bool basicQuality = SolverConfig.QualitiesV2.TryGetValue(2, out var temp) ? temp : false;
             ImGui.AlignTextToFramePadding();
+            ImGui.PushStyleColor(ImGuiCol.Text, Colors.QualityBasic);
             ImGui.TextUnformatted("Basic"u8);
+            ImGui.PopStyleColor();
             ImGui.SameLine();
             if (ImGui.Checkbox("##Basic", ref basicQuality))
             {
@@ -296,7 +298,9 @@ namespace BPSR_ZDPS
 
             bool advancedQuality = SolverConfig.QualitiesV2.TryGetValue(3, out var temp2) ? temp2 : false;
             ImGui.AlignTextToFramePadding();
+            ImGui.PushStyleColor(ImGuiCol.Text, Colors.QualityAdvanced);
             ImGui.TextUnformatted("Advanced"u8);
+            ImGui.PopStyleColor();
             ImGui.SameLine();
             if (ImGui.Checkbox("##Advanced", ref advancedQuality))
             {
@@ -307,7 +311,9 @@ namespace BPSR_ZDPS
 
             bool excellentQuality = SolverConfig.QualitiesV2.TryGetValue(4, out var temp3) ? temp3 : false;
             ImGui.AlignTextToFramePadding();
+            ImGui.PushStyleColor(ImGuiCol.Text, Colors.QualityExcellent);
             ImGui.TextUnformatted("Excellent"u8);
+            ImGui.PopStyleColor();
             ImGui.SameLine();
             if (ImGui.Checkbox("##Excellent", ref excellentQuality))
             {
@@ -365,7 +371,7 @@ namespace BPSR_ZDPS
 
             ImGui.SetCursorPos(pos + new Vector2(leftWidth - 50, 0));
             var isAlreadyAdded = SolverConfig.StatPriorities.Any(x => x.Id == PendingStatToAdd.StatId);
-            ImGui.BeginDisabled(isAlreadyAdded || SolverConfig.StatPriorities.Count >= 7);
+            ImGui.BeginDisabled(isAlreadyAdded || SolverConfig.StatPriorities.Count >= 12);
             if (ImGui.Button("Add", new Vector2(50, 0)))
             {
                 SolverConfig.StatPriorities.Add(new StatPrio()
@@ -664,7 +670,7 @@ namespace BPSR_ZDPS
             }
         }
 
-        private static void LoadSavedModData(string path)
+        public static void LoadSavedModData(string path)
         {
             try
             {
