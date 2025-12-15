@@ -222,11 +222,7 @@ namespace BPSR_ZDPS
             // Save the current encounter to the database before exiting
             if (EncounterManager.Current != null)
             {
-                EncounterManager.StopEncounter(true);
-                if (EncounterManager.Current.HasStatsBeenRecorded(true))
-                {
-                    DB.InsertEncounter(EncounterManager.Current);
-                }
+                EncounterManager.ShutdownManager();
             }
 
             DB.CloseAndSave();
@@ -236,7 +232,6 @@ namespace BPSR_ZDPS
             HotKeyManager.UnregisterAllHotKeys();
             //HotKeyManager.UnregisterHookProc();
 
-            EntityCache.Instance.FinalSave();
             System.Diagnostics.Stopwatch writingTimeout = new();
             writingTimeout.Start();
             while (EntityCache.Instance.IsWritingFile)

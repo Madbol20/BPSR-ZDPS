@@ -186,6 +186,26 @@ namespace BPSR_ZDPS
             EntityCache.Instance.Save();
         }
 
+        /// <summary>
+        /// Used to set the last few values before the Encounter is sent off into the closing database on application exit.
+        /// </summary>
+        public static void ShutdownManager()
+        {
+            if (Current != null && Current.EndTime == DateTime.MinValue)
+            {
+                Current.SetEndTime(DateTime.Now);
+            }
+
+            UpdateTruePerValuesCTS.Cancel();
+
+            if (Current != null && Current.HasStatsBeenRecorded(true))
+            {
+                DB.InsertEncounter(Current);
+            }
+
+            EntityCache.Instance.FinalSave();
+        }
+
         public static void SignalEncounterEndFinal(EncounterEndFinalData data)
         {
             OnEncounterEndFinal(data);
