@@ -74,6 +74,7 @@ namespace BPSR_ZDPS
             }
 
             // TODO: (Do this after we correctly track boss/entity hp/state in here) If Reason is not NewObjective, and it's not a wipe, if the boss has HP remaining consider it a "ran out of time" event
+            // TODO: Allow reporting if there are 2 or more Elites in the Encounter. This will solve Guild Hunt no longer being reported along with a couple other edge cases.
 
             // Only create reports when there is a boss in the encounter and it is dead or the encounter is a wipe
             EncounterManager.Current.Entities.TryGetValue(EncounterManager.Current.BossUUID, out var bossEntity);
