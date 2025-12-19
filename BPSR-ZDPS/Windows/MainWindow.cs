@@ -353,7 +353,7 @@ namespace BPSR_ZDPS.Windows
                     {
                         ModuleSolver.Open();
                     }
-                    ImGui.SetItemTooltip("FInd the best module combos for your build");
+                    ImGui.SetItemTooltip("Find the best module combos for your build.");
 
                     ImGui.Separator();
                     if (ImGui.MenuItem("Settings"))

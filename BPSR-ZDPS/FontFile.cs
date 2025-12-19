@@ -66,12 +66,13 @@ namespace BPSR_ZDPS
             ValidateAndLoad();
         }
 
-        public unsafe ImFontPtr BindToImGui(float fontSize = 18.0f)
+        public unsafe ImFontPtr BindToImGui(float fontSize = 18.0f, bool mergeMode = false)
         {
             ImFontPtr result = null;
 
             ImFontConfig* fontConfig = ImGui.ImFontConfig();
             fontConfig->FontDataOwnedByAtlas = 0;
+            fontConfig->MergeMode = Convert.ToByte(mergeMode);
 
             ushort[] ranges = GetGlyphRanges();
             if (ranges == null || ranges.Length == 0)

@@ -24,6 +24,11 @@ namespace BPSR_ZDPS
                     return report.Draw();
                 });
 
+                if (tex == null)
+                {
+                    Serilog.Log.Error($"Report Texture was unexpectedly rendered as Null. Encounter BattleId:{encounter.BattleId} EncounterId:{encounter.EncounterId}");
+                }
+
                 var img = TextureSaveUtil.Texture2DToPng(OffscreenImGuiRenderer.D3D11Manager.Device, OffscreenImGuiRenderer.D3D11Manager.DeviceContext, tex);
 
                 if (Settings.Instance.SaveEncounterReportToFile)

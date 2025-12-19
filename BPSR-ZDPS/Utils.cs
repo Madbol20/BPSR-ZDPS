@@ -297,7 +297,7 @@ namespace BPSR_ZDPS
         public static void SetWindowClickThrough(bool clickThrough, ImGuiViewportPtr? viewport = null)
         {
             viewport = viewport ?? ImGui.GetWindowViewport();
-            GLFW.SetWindowAttrib((GLFWwindowPtr)viewport.Value.PlatformHandle, 131085, 1);
+            GLFW.SetWindowAttrib((GLFWwindowPtr)viewport.Value.PlatformHandle, GLFW.GLFW_MOUSE_PASSTHROUGH, 1);
         }
 
         public static void SetWindowTopmost(ImGuiViewportPtr? viewport = null)
