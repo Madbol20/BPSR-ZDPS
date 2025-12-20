@@ -752,6 +752,11 @@ namespace BPSR_ZDPS.Windows
                         {
                             ModuleSolver.Init();
                         }
+                        ImGui.Indent();
+                        ImGui.BeginDisabled(true);
+                        ImGui.TextWrapped("Reloads your module inventory from the 'ModulesSaveData.json' file.");
+                        ImGui.EndDisabled();
+                        ImGui.Unindent();
 
                         ShowRestartRequiredNotice(Settings.Instance.LogToFile != logToFile, "Write Debug Log To File");
                         ImGui.AlignTextToFramePadding();
