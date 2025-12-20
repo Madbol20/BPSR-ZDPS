@@ -85,21 +85,39 @@ namespace BPSR_ZDPS
             {
                 Log.Debug($"BossAttrHp={bossHp}, BossAttrMaxHp={bossMaxHp}, HpPct={EncounterManager.Current.BossHpPct}");
             }
-            if (
-                e.Reason == EncounterStartReason.NewObjective || e.Reason == EncounterStartReason.Restart ||
-                (
-                EncounterManager.Current.BossUUID > 0 && (bossState != null && (bossEntity?.Hp == 0 || (EActorState)bossState == EActorState.ActorStateDead) || EncounterManager.Current.IsWipe)
-                )
-                )
-            //if (e.Reason == EncounterStartReason.NewObjective || (EncounterManager.Current.BossUUID > 0 && (EncounterManager.Current.BossHpPct == 0 || EncounterManager.Current.IsWipe)))
+            if (e.Reason == EncounterStartReason.NewObjective || e.Reason == EncounterStartReason.Restart ||
+                (EncounterManager.Current.BossUUID > 0 &&
+                        (bossState != null &&
+                            (bossEntity?.Hp == 0 || (EActorState)bossState == EActorState.ActorStateDead) ||
+                            EncounterManager.Current.IsWipe)))
             {
                 Log.Debug($"IntegrationManager is creating an Encounter Report [Reason = {e.Reason}].");
                 HelperMethods.DeferredImGuiRenderAction = () =>
                 {
                     // Hold onto a reference for the Encounter as once we enter the task it will no longer be the current one and may already be moved into the database
                     var encounter = EncounterManager.Current;
+                    if (encounter == null)
+                    {
+                        Log.Error($"IntegrationManager CreateReportImg had EncounterManager.Current == Null! This should not happen. Aborting the Report process.");
+                        return;
+                    }
 
-                    var img = ReportImgGen.CreateReportImg(encounter);
+                    SixLabors.ImageSharp.Image<SixLabors.ImageSharp.PixelFormats.Rgba32>? img;
+                    try
+                    {
+                        img = ReportImgGen.CreateReportImg(encounter);
+                        if (img == null)
+                        {
+                            Log.Error($"IntegrationManager CreateReportImg returned a Null image object! Aborting the Report process.");
+                            return;
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Log.Error($"Unexpected error in IntegrationManager CreateReportImg:\n{ex.Message}\nStack Trace:\n{ex.StackTrace}");
+                        return;
+                    }
+                    
                     Task.Factory.StartNew(() =>
                     {
                         if (Settings.Instance.WebhookReportsEnabled)

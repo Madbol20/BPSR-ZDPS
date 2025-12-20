@@ -31,10 +31,23 @@ namespace BPSR_ZDPS
 
                 var img = TextureSaveUtil.Texture2DToPng(OffscreenImGuiRenderer.D3D11Manager.Device, OffscreenImGuiRenderer.D3D11Manager.DeviceContext, tex);
 
+                if (img == null)
+                {
+                    Serilog.Log.Error($"CreateReportImg Texture2DToPng returned a Null image. Aborting the Report process.");
+                    return img;
+                }
+
                 if (Settings.Instance.SaveEncounterReportToFile)
                 {
-                    Directory.CreateDirectory("Reports");
-                    img.SaveAsPng(Path.Combine("Reports", $"Report_{encounter.StartTime.ToString("yyyy-MM-dd_HH-mm-ss-ff")}.png"));
+                    try
+                    {
+                        Directory.CreateDirectory("Reports");
+                        img.SaveAsPng(Path.Combine("Reports", $"Report_{encounter.StartTime.ToString("yyyy-MM-dd_HH-mm-ss-ff")}.png"));
+                    }
+                    catch (Exception ex)
+                    {
+                        Serilog.Log.Error($"Error while trying to write Encounter Report to file.\n{ex.Message}\nStack Trace:\n{ex.StackTrace}");
+                    }
                 }
                 
                 return img;
