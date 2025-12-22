@@ -28,6 +28,7 @@ namespace BPSR_ZDPS.Managers.External
         public static ESpawnDataLoadStatus SpawnDataRealtimeConnection = ESpawnDataLoadStatus.NotLoaded;
         public static List<MobsDescriptor> MobsDescriptors = new();
         public static List<StatusDescriptor> StatusDescriptors = new();
+        public static List<string> BPTimerRegions = new();
 
         public enum ESpawnDataLoadStatus : int
         {
@@ -205,14 +206,12 @@ namespace BPSR_ZDPS.Managers.External
                         }
 
                         var region_data = mob.Expand.Map.RegionData;
-                        int totalChannels = 0;
-                        if (region_data.ContainsKey("NA"))
+                        foreach (var region in region_data)
                         {
-                            totalChannels = region_data["NA"];
-                        }
-                        else
-                        {
-                            totalChannels = region_data.FirstOrDefault().Value;
+                            if (!BPTimerRegions.Contains(region.Key))
+                            {
+                                BPTimerRegions.Add(region.Key);
+                            }
                         }
 
                         MobsDescriptors.Add(new MobsDescriptor()
@@ -224,7 +223,7 @@ namespace BPSR_ZDPS.Managers.External
                             MobUID = mob.UID,
                             MobMapId = mob.Expand.Map.Id,
                             MobMapName = mob.Expand.Map.Name,
-                            MobMapTotalChannels = totalChannels,
+                            MobMapTotalChannels = region_data ?? new(),
                             MobMapUID = mob.Expand.Map.UID,
                             MonsterId = monsterId,
                             GameMobName = gameMonsterName
@@ -370,7 +369,7 @@ namespace BPSR_ZDPS.Managers.External
         public int MobUID { get; set; }
         public string MobMapId { get; set; }
         public string MobMapName { get; set; }
-        public int MobMapTotalChannels { get; set; }
+        public Dictionary<string, int> MobMapTotalChannels = new();
         public int MobMapUID { get; set; }
         public long MonsterId { get; set; }
         public string GameMobName { get; set; }

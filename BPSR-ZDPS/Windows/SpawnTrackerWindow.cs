@@ -133,6 +133,8 @@ namespace BPSR_ZDPS.Windows
                     }
                 }
 
+                string regionName = "";
+
                 if (!CollapseToContentOnly)
                 {
                     ImGui.PushStyleVarX(ImGuiStyleVar.FramePadding, 4);
@@ -140,6 +142,28 @@ namespace BPSR_ZDPS.Windows
                     ImGui.PushStyleColor(ImGuiCol.FrameBg, ImGui.ColorConvertFloat4ToU32(new Vector4(37 / 255f, 37 / 255f, 38 / 255f, 1.0f)));
                     ImGui.PushStyleVar(ImGuiStyleVar.FrameBorderSize, 1);
                     ImGui.TextUnformatted("Select Monsters To Track: ");
+
+                    ImGui.BeginDisabled(BPTimerManager.SpawnDataLoaded == BPTimerManager.ESpawnDataLoadStatus.InProgress);
+
+                    ImGui.SameLine();
+                    ImGui.SetCursorPosX(ImGui.GetContentRegionAvail().X);
+                    ImGui.TextUnformatted("Region: ");
+                    ImGui.SameLine();
+                    int selectedRegionIndex = Settings.Instance.WindowSettings.SpawnTracker.SelectedRegionIndex;
+                    var regions = BPTimerManager.BPTimerRegions.ToArray();
+                    ImGui.SetNextItemWidth(-1);
+                    if (ImGui.Combo("##RegionSelectionCombo", ref selectedRegionIndex, regions, regions.Length))
+                    {
+                        Settings.Instance.WindowSettings.SpawnTracker.SelectedRegionIndex = selectedRegionIndex;
+                    }
+
+                    ImGui.EndDisabled();
+
+                    if (regions.Length > selectedRegionIndex)
+                    {
+                        regionName = regions[selectedRegionIndex];
+                    }
+
                     if (ImGui.BeginListBox("##FilterDataListBox", new Vector2(-1, 0)))
                     {
                         ImGui.PopStyleVar();
@@ -149,16 +173,30 @@ namespace BPSR_ZDPS.Windows
                         {
                             if (MonsterFilters.TryGetValue(mob.MobId, out var filterStatus))
                             {
-                                bool isEnabled = filterStatus;
+                                bool? savedStatus = null;
+                                if (Settings.Instance.WindowSettings.SpawnTracker.TrackedMonsters.TryGetValue(mob.MobId, out var saved))
+                                {
+                                    savedStatus = saved;
+                                    MonsterFilters[mob.MobId] = saved;
+                                }
+
+                                bool isEnabled = savedStatus ?? filterStatus;
                                 string name = mob.GameMobName;
                                 if (string.IsNullOrEmpty(name))
                                 {
                                     name = mob.MobName;
                                 }
-                                if (ImGui.Checkbox($"{name} [{mob.MobMapName}] ({mob.MobMapTotalChannels} Lines)##MobCheckBox_{mob.MobId}", ref isEnabled))
+                                int totalLines = 0;
+                                if (mob.MobMapTotalChannels.TryGetValue(regionName, out var lineCount))
+                                {
+                                    totalLines = lineCount;
+                                }
+                                if (ImGui.Checkbox($"{name} [{mob.MobMapName}] ({totalLines} Lines)##MobCheckBox_{mob.MobId}", ref isEnabled))
                                 {
                                     MonsterFilters[mob.MobId] = isEnabled;
                                 }
+
+                                Settings.Instance.WindowSettings.SpawnTracker.TrackedMonsters[mob.MobId] = isEnabled;
                             }
                         }
 
@@ -174,6 +212,7 @@ namespace BPSR_ZDPS.Windows
                     {
                         foreach (var item in MonsterFilters)
                         {
+                            Settings.Instance.WindowSettings.SpawnTracker.TrackedMonsters[item.Key] = true;
                             MonsterFilters[item.Key] = true;
                         }
                     }
@@ -182,6 +221,7 @@ namespace BPSR_ZDPS.Windows
                     {
                         foreach (var item in MonsterFilters)
                         {
+                            Settings.Instance.WindowSettings.SpawnTracker.TrackedMonsters[item.Key] = false;
                             MonsterFilters[item.Key] = false;
                         }
                     }
@@ -230,7 +270,7 @@ namespace BPSR_ZDPS.Windows
                             ImGui.EndGroup();
                             var groupSize = ImGui.GetItemRectSize();
 
-                            var statusDescriptors = BPTimerManager.StatusDescriptors.AsValueEnumerable().Where(x => x.MobId == mob.MobId && x.Region == "NA").OrderByDescending(x => x.UpdateTimestamp).OrderBy(x =>
+                            var statusDescriptors = BPTimerManager.StatusDescriptors.AsValueEnumerable().Where(x => x.MobId == mob.MobId && x.Region == regionName).OrderByDescending(x => x.UpdateTimestamp).OrderBy(x =>
                             {
                                 if (x.UpdateTimestamp?.Subtract(DateTime.Now).TotalMinutes < -5 && x.LastHp != 0)
                                 {
@@ -434,5 +474,7 @@ namespace BPSR_ZDPS.Windows
         public float TextScale = 1.0f;
         public float LineScale = 1.0f;
         public int DisplayLineCountLimit = 5;
+        public int SelectedRegionIndex = 0;
+        public Dictionary<string, bool> TrackedMonsters = new();
     }
 }
