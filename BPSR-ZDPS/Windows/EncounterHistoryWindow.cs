@@ -304,6 +304,15 @@ namespace BPSR_ZDPS.Windows
                         }
                     }
                     ImGui.SetItemTooltip("For Debug Purposes Only!\nForcefully sends the selected Encounter Report to the configured Discord URL Webhook.");
+                    if (ImGui.BeginMenu("Change Wipe Status"))
+                    {
+                        if (ImGui.MenuItem("Is Wipe", encounters[SelectedEncounterIndex].IsWipe))
+                        {
+                            encounters[SelectedEncounterIndex].SetWipeState(!encounters[SelectedEncounterIndex].IsWipe);
+                        }
+                        ImGui.EndMenu();
+                    }
+                    ImGui.SetItemTooltip("For Debug Purposes Only!\nAllows changing the Wipe status flag for the selected Encounter.\nDoes not write changes to Database.");
 
                     ImGui.EndPopup();
                 }

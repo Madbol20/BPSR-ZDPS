@@ -318,7 +318,7 @@ namespace BPSR_ZDPS.Web
 
             var msg = new DiscordWebhookPayload("ZDPS", msgContentBuilder.ToString())
             {
-                AvatarURL = "https://media.discordapp.net/attachments/1443057617113977015/1444260874784084008/co25l4.jpg?ex=692c1041&is=692abec1&hm=75449222af948cba198474a8e580e9e5e12a7f8bbd546935aeeec00d8ba7cb2d&=&format=webp"
+                AvatarURL = "https://i.imgur.com/FsXoGt4.png"
             };
 
             return msg;
