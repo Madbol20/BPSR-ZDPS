@@ -62,7 +62,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\BPSR-DeepsLib\BPSR-ZDPSLib.csproj" />
+    <ProjectReference Include="..\BPSR-ZDPSLib\BPSR-ZDPSLib.csproj" />
   </ItemGroup>
 
   <ItemGroup>
