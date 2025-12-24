@@ -184,14 +184,17 @@ namespace BPSR_ZDPS
                                 }
                             });
 
-                            AddSettingRow("Solver Mode:", () =>
+                            if (!(Vector.IsHardwareAccelerated && Avx2.IsSupported))
                             {
-                                string[] solverNames = ["Legacy", "Fallback", "Normal"];
-                                int selectedSolver = (int)Settings.Instance.WindowSettings.ModuleWindow.SolverMode;
-                                ImGui.SetNextItemWidth(300);
-                                ImGui.Combo("##SolverMode", ref selectedSolver, solverNames, 3);
-                                Settings.Instance.WindowSettings.ModuleWindow.SolverMode = (SolverModes)selectedSolver;
-                            });
+                                AddSettingRow("Solver Mode:", () =>
+                                {
+                                    string[] solverNames = ["Legacy", "Fallback", "Normal"];
+                                    int selectedSolver = (int)Settings.Instance.WindowSettings.ModuleWindow.SolverMode;
+                                    ImGui.SetNextItemWidth(300);
+                                    ImGui.Combo("##SolverMode", ref selectedSolver, solverNames, 3);
+                                    Settings.Instance.WindowSettings.ModuleWindow.SolverMode = (SolverModes)selectedSolver;
+                                });
+                            }
 
                             AddSettingRow("Include All Stats In Scoring:", () =>
                             {
