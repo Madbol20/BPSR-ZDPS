@@ -1208,7 +1208,10 @@ namespace BPSR_ZDPS
             EDamageProperty damageElement, EDamageType damageType, EDamageMode damageMode,
             bool isCrit, bool isLucky, bool isCauseLucky, bool isMiss, bool isDead, ExtraPacketData extraPacketData)
         {
-            TotalDamage += (ulong)damage;
+            if (damageType != EDamageType.Immune)
+            {
+                TotalDamage += (ulong)damage;
+            }
 
             if (damageType == EDamageType.Absorbed)
             {
@@ -1251,7 +1254,11 @@ namespace BPSR_ZDPS
             EDamageProperty damageElement, EDamageType damageType, EDamageMode damageMode,
             bool isCrit, bool isLucky, bool isCauseLucky, bool isMiss, bool isDead, ExtraPacketData extraPacketData)
         {
-            TotalTakenDamage += (ulong)damage;
+            if (damageType != EDamageType.Immune)
+            {
+                TotalTakenDamage += (ulong)damage;
+            }
+
             TakenStats.AddData(damage, skillLevel, isCrit, isLucky, hpLessen, isCauseLucky, damageElement, damageType, damageMode, isDead, extraPacketData);
             RegisterSkillData(ESkillType.Taken, skillId, skillLevel, damage, isCrit, isLucky, hpLessen, isCauseLucky, damageElement, damageType, damageMode, isDead, extraPacketData);
         }

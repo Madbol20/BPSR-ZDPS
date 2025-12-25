@@ -886,12 +886,7 @@ namespace BPSR_ZDPS
                 }
                 // If damage is 0, the target was likely Immune and the DamageType value will reflect that
                 // We will still pass it on so it can be properly registered in the encounter/entity
-
-                if (damage < 0)
-                {
-                    System.Diagnostics.Debug.WriteLine("syncDamageInfo damage value is negative!");
-                    System.Diagnostics.Debug.WriteLine(syncDamageInfo);
-                }
+                // Note: There are some rare cases where an Immune event occurs but the damage is not 0, HpLessen however will be null
 
                 bool isCrit = syncDamageInfo.TypeFlag != null && ((syncDamageInfo.TypeFlag & 1) == 1);
                 bool isHeal = syncDamageInfo.Type == EDamageType.Heal;
