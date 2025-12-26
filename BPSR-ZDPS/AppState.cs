@@ -27,6 +27,8 @@ namespace BPSR_ZDPS
         public static bool IsBenchmarkMode { get; set; }
         public static int BenchmarkTime { get; set; }
         public static bool HasBenchmarkBegun { get; set; }
+        public static bool BenchmarkSingleTarget { get; set; }
+        public static long BenchmarkSingleTargetUUID { get; set; }
 
         public static bool MousePassthrough { get; set; } = false;
 

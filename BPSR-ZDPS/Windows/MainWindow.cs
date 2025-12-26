@@ -355,6 +355,14 @@ namespace BPSR_ZDPS.Windows
                             }
                             AppState.BenchmarkTime = benchmarkTime;
                         }
+
+                        bool benchmarkSingleTarget = AppState.BenchmarkSingleTarget;
+                        ImGui.AlignTextToFramePadding();
+                        ImGui.Text("Only Track First Target Hit: ");
+                        ImGui.SameLine();
+                        ImGui.Checkbox("##BenchmarkSingleTarget", ref benchmarkSingleTarget);
+                        AppState.BenchmarkSingleTarget = benchmarkSingleTarget;
+
                         ImGui.EndDisabled();
                         
                         ImGui.TextUnformatted("Note: The Benchmark time will start after the next attack.\nOnly data for your character will be processed.");
@@ -372,6 +380,7 @@ namespace BPSR_ZDPS.Windows
                         {
                             if (ImGui.Button("Start Benchmark", new Vector2(-1, 0)))
                             {
+                                AppState.BenchmarkSingleTargetUUID = 0;
                                 AppState.IsBenchmarkMode = true;
                                 CreateNewEncounter();
                             }
