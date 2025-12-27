@@ -9,7 +9,7 @@ namespace BPSR_ZDPS.DataTypes
 {
     public static class AppStrings
     {
-        public static string CurrentLocale { get; set; } = CultureInfo.CurrentCulture.TwoLetterISOLanguageName;
+        public static string CurrentLocale { get; set; } = "en";//CultureInfo.CurrentCulture.TwoLetterISOLanguageName;
 
         public static Dictionary<string, Dictionary<string, string>> Strings = new();
 
@@ -22,7 +22,21 @@ namespace BPSR_ZDPS.DataTypes
             }
             else
             {
-                return key;
+                if (KeyIfEmptyValue)
+                {
+                    return key;
+                }
+                else
+                {
+                    if (value.TryGetValue(CurrentLocale, out var enString))
+                    {
+                        return enString;
+                    }
+                    else
+                    {
+                        return key; // This probably should be an empty string at this point, but we'll use the key for now
+                    }
+                }
             }
         }
     }
