@@ -1532,6 +1532,16 @@ namespace BPSR_ZDPS.Windows
             {
                 ImGui.PopStyleColor();
             }
+            ImGui.SameLine();
+            ImGui.BeginDisabled(bindingVariable == 0);
+            if (ImGui.Button($"X##ClearBindingBtn_{bindingName}"))
+            {
+                bindingVariable = 0;
+                bindingVariableName = "";
+                bindingState = false;
+            }
+            ImGui.EndDisabled();
+            ImGui.SetItemTooltip("Clear Keybinding.");
         }
     }
 }
