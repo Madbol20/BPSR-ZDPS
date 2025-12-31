@@ -504,6 +504,10 @@ namespace BPSR_ZDPS.Windows
                             {
                                 theme = ETheme.Light;
                             }
+                            if (ImGui.Selectable("Black"))
+                            {
+                                theme = ETheme.Black;
+                            }
                             ImGui.EndCombo();
                         }
                         ImGui.Indent();

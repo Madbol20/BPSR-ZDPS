@@ -114,7 +114,8 @@ public class Settings
 public enum ETheme
 {
     Dark,
-    Light
+    Light,
+    Black
 }
 
 public enum EGameCapturePreference
