@@ -112,7 +112,10 @@ namespace BPSR_ZDPS.Windows
         public static void Draw(MainWindow mainWindow)
         {
             InitializeBindings();
-            if (Settings.Instance.WindowSettings.RaidManagerCountdown.CountdownPosition == new Vector2())
+
+            var windowSettings = Settings.Instance.WindowSettings.RaidManagerCountdown;
+
+            if (windowSettings.CountdownPosition == new Vector2())
             {
                 CenterDisplay();
             }
@@ -132,6 +135,7 @@ namespace BPSR_ZDPS.Windows
                 {
                     ImGui.SetNextWindowClass(CountdownDisplayClass);
 
+                    // This is how we force a renderer clear for this window as there doesn't appear to be another way while we're supporting transparency
                     if (RenderClearTime % 2 == 0)
                     {
                         ImGui.SetNextWindowSize(new Vector2(300, 300), ImGuiCond.Always);
@@ -141,9 +145,9 @@ namespace BPSR_ZDPS.Windows
                         ImGui.SetNextWindowSize(new Vector2(300, 301), ImGuiCond.Always);
                     }
                     
-                    if (Settings.Instance.WindowSettings.RaidManagerCountdown.CountdownPosition != new Vector2())
+                    if (windowSettings.CountdownPosition != new Vector2())
                     {
-                        ImGui.SetNextWindowPos(Settings.Instance.WindowSettings.RaidManagerCountdown.CountdownPosition, ImGuiCond.Appearing);
+                        ImGui.SetNextWindowPos(windowSettings.CountdownPosition, ImGuiCond.Appearing);
                     }
 
                     if (NewCountdownWindowLocation != null)
@@ -157,7 +161,7 @@ namespace BPSR_ZDPS.Windows
                         ImGui.PushStyleColor(ImGuiCol.ChildBg, new Vector4(0, 0, 0, 0.0f));
                         if (ImGui.BeginChild("##CountdownChild", new Vector2(0, 0), ImGuiWindowFlags.NoInputs))
                         {
-                            if (Settings.Instance.WindowSettings.RaidManagerCountdown.UseStylizedNumbers)
+                            if (windowSettings.UseStylizedNumbers)
                             {
                                 string remainingStr = ((int)Math.Ceiling(countdownRemaining.TotalSeconds)).ToString();
                                 var avail = ImGui.GetContentRegionAvail();
@@ -237,7 +241,7 @@ namespace BPSR_ZDPS.Windows
                 ImGui.AlignTextToFramePadding();
                 ImGui.TextUnformatted("Allow Countdowns: ");
                 ImGui.SameLine();
-                ImGui.Checkbox("##CountdownsEnabled", ref Settings.Instance.WindowSettings.RaidManagerCountdown.AllowCountdowns);
+                ImGui.Checkbox("##CountdownsEnabled", ref windowSettings.AllowCountdowns);
                 ImGui.Indent();
                 ImGui.BeginDisabled(true);
                 ImGui.TextWrapped("When enabled, allows Countdowns to be processed and displayed.");
@@ -247,7 +251,7 @@ namespace BPSR_ZDPS.Windows
                 ImGui.AlignTextToFramePadding();
                 ImGui.TextUnformatted("Use Stylized Numbers: ");
                 ImGui.SameLine();
-                ImGui.Checkbox("##UseStylizedNumbers", ref Settings.Instance.WindowSettings.RaidManagerCountdown.UseStylizedNumbers);
+                ImGui.Checkbox("##UseStylizedNumbers", ref windowSettings.UseStylizedNumbers);
                 ImGui.Indent();
                 ImGui.BeginDisabled(true);
                 ImGui.TextWrapped("When enabled, the numbers for the Countdown time will be stylized images instead of plain text.");
@@ -317,7 +321,7 @@ namespace BPSR_ZDPS.Windows
                                 long matchIdx = 0;
                                 foreach (var match in EntityFilterMatches)
                                 {
-                                    bool isSelected = Settings.Instance.WindowSettings.RaidManagerRaidWarning.PlayerUIDBlacklist.Contains(match.Value.UID);
+                                    bool isSelected = windowSettings.PlayerUIDBlacklist.Contains(match.Value.UID);
 
                                     if (isSelected)
                                     {
@@ -325,7 +329,7 @@ namespace BPSR_ZDPS.Windows
                                         ImGui.PushFont(HelperMethods.Fonts["FASIcons"], ImGui.GetFontSize());
                                         if (ImGui.Button($"{FASIcons.Minus}##RemoveBtn_{matchIdx}", new Vector2(30, 30)))
                                         {
-                                            Settings.Instance.WindowSettings.RaidManagerRaidWarning.PlayerUIDBlacklist.Remove(match.Value.UID);
+                                            windowSettings.PlayerUIDBlacklist.Remove(match.Value.UID);
                                         }
                                         ImGui.PopFont();
                                         ImGui.PopStyleColor();
@@ -336,7 +340,7 @@ namespace BPSR_ZDPS.Windows
                                         ImGui.PushFont(HelperMethods.Fonts["FASIcons"], ImGui.GetFontSize());
                                         if (ImGui.Button($"{FASIcons.Plus}##AddBtn_{matchIdx}", new Vector2(30, 30)))
                                         {
-                                            Settings.Instance.WindowSettings.RaidManagerRaidWarning.PlayerUIDBlacklist.Add(match.Value.UID);
+                                            windowSettings.PlayerUIDBlacklist.Add(match.Value.UID);
                                         }
                                         ImGui.PopFont();
                                         ImGui.PopStyleColor();
@@ -362,9 +366,9 @@ namespace BPSR_ZDPS.Windows
 
                 ImGui.SetNextWindowSize(new Vector2(300, 300), ImGuiCond.Always);
 
-                if (Settings.Instance.WindowSettings.RaidManagerCountdown.CountdownPosition != new Vector2())
+                if (windowSettings.CountdownPosition != new Vector2())
                 {
-                    ImGui.SetNextWindowPos(Settings.Instance.WindowSettings.RaidManagerCountdown.CountdownPosition, ImGuiCond.Appearing);
+                    ImGui.SetNextWindowPos(windowSettings.CountdownPosition, ImGuiCond.Appearing);
                 }
 
                 if (NewCountdownWindowLocation != null)
@@ -377,7 +381,7 @@ namespace BPSR_ZDPS.Windows
                 {
                     ImGui.TextAligned(0.5f, -1, "Countdown - Edit Position");
                     ImGui.SetCursorPos(new(0));
-                    Settings.Instance.WindowSettings.RaidManagerCountdown.CountdownPosition = ImGui.GetWindowPos();
+                    windowSettings.CountdownPosition = ImGui.GetWindowPos();
 
                     
                     var remaining = (int)Math.Ceiling(EditCountdown.Subtract(DateTime.Now).TotalSeconds);
@@ -386,7 +390,7 @@ namespace BPSR_ZDPS.Windows
                         EditCountdown = DateTime.Now.AddSeconds(30);
                     }
 
-                    if (Settings.Instance.WindowSettings.RaidManagerCountdown.UseStylizedNumbers)
+                    if (windowSettings.UseStylizedNumbers)
                     {
                         string remainingStr = remaining.ToString();
                         var avail = ImGui.GetContentRegionAvail();

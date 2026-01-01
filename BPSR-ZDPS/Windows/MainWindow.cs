@@ -35,7 +35,7 @@ namespace BPSR_ZDPS.Windows
 
         List<MeterBase> Meters = new();
         public EntityInspector entityInspector = new();
-        public bool IsTopMost = false;
+        static bool IsPinned = false;
         static int LastPinnedOpacity = 100;
         public Vector2 WindowPosition;
         public Vector2 NextWindowPosition = new();
@@ -74,14 +74,16 @@ namespace BPSR_ZDPS.Windows
             ImGui.SetNextWindowSize(DefaultWindowSize, ImGuiCond.FirstUseEver);
             ImGui.SetNextWindowSizeConstraints(new Vector2(375, 150), new Vector2(ImGui.GETFLTMAX()));
 
-            if (Settings.Instance.WindowSettings.MainWindow.WindowPosition != new Vector2())
+            var windowSettings = Settings.Instance.WindowSettings.MainWindow;
+
+            if (windowSettings.WindowPosition != new Vector2())
             {
-                ImGui.SetNextWindowPos(Settings.Instance.WindowSettings.MainWindow.WindowPosition, ImGuiCond.FirstUseEver);
+                ImGui.SetNextWindowPos(windowSettings.WindowPosition, ImGuiCond.FirstUseEver);
             }
 
-            if (Settings.Instance.WindowSettings.MainWindow.WindowSize != new Vector2())
+            if (windowSettings.WindowSize != new Vector2())
             {
-                ImGui.SetNextWindowSize(Settings.Instance.WindowSettings.MainWindow.WindowSize, ImGuiCond.FirstUseEver);
+                ImGui.SetNextWindowSize(windowSettings.WindowSize, ImGuiCond.FirstUseEver);
             }
 
             if (NextWindowPosition != new Vector2())
@@ -97,7 +99,7 @@ namespace BPSR_ZDPS.Windows
             }
 
             ImGuiWindowFlags exWindowFlags = ImGuiWindowFlags.None;
-            if (AppState.MousePassthrough && IsTopMost)
+            if (AppState.MousePassthrough && windowSettings.TopMost)
             {
                 exWindowFlags |= ImGuiWindowFlags.NoInputs;
             }
@@ -178,6 +180,14 @@ namespace BPSR_ZDPS.Windows
 
                 Utils.SetCurrentWindowIcon();
                 Utils.BringWindowToFront();
+
+                if (windowSettings.TopMost && !IsPinned)
+                {
+                    IsPinned = true;
+                    Utils.SetWindowTopmost();
+                    Utils.SetWindowOpacity(windowSettings.Opacity * 0.01f);
+                    LastPinnedOpacity = windowSettings.Opacity;
+                }
 
                 if (Settings.Instance.External.BPTimerSettings.ExternalBPTimerEnabled)
                 {
@@ -286,6 +296,8 @@ namespace BPSR_ZDPS.Windows
         {
             if (ImGui.BeginMenuBar())
             {
+                var windowSettings = Settings.Instance.WindowSettings.MainWindow;
+
                 MainMenuBarSize = ImGui.GetWindowSize();
 
                 ImGui.Text("ZDPS - BPSR Damage Meter");
@@ -307,27 +319,29 @@ namespace BPSR_ZDPS.Windows
 
                 ImGui.SetCursorPosX(MainMenuBarSize.X - (settingsWidth * 3));
                 ImGui.PushFont(HelperMethods.Fonts["FASIcons"], ImGui.GetFontSize());
-                ImGui.PushStyleColor(ImGuiCol.Text, new Vector4(1.0f, AppState.MousePassthrough ? 0.0f : 1.0f, AppState.MousePassthrough ? 0.0f : 1.0f, IsTopMost ? 1.0f : 0.5f));
+                ImGui.PushStyleColor(ImGuiCol.Text, new Vector4(1.0f, AppState.MousePassthrough ? 0.0f : 1.0f, AppState.MousePassthrough ? 0.0f : 1.0f, windowSettings.TopMost ? 1.0f : 0.5f));
                 if (ImGui.MenuItem($"{FASIcons.Thumbtack}##TopMostBtn"))
                 {
-                    if (!IsTopMost)
+                    if (!windowSettings.TopMost)
                     {
                         Utils.SetWindowTopmost();
-                        Utils.SetWindowOpacity(Settings.Instance.WindowSettings.MainWindow.Opacity * 0.01f);
-                        LastPinnedOpacity = Settings.Instance.WindowSettings.MainWindow.Opacity;
-                        IsTopMost = true;
+                        Utils.SetWindowOpacity(windowSettings.Opacity * 0.01f);
+                        LastPinnedOpacity = windowSettings.Opacity;
+                        windowSettings.TopMost = true;
+                        IsPinned = true;
                     }
                     else
                     {
                         Utils.UnsetWindowTopmost();
                         Utils.SetWindowOpacity(1.0f);
-                        IsTopMost = false;
+                        windowSettings.TopMost = false;
+                        IsPinned = false;
                     }
                 }
-                if (IsTopMost && LastPinnedOpacity != Settings.Instance.WindowSettings.MainWindow.Opacity)
+                if (windowSettings.TopMost && LastPinnedOpacity != windowSettings.Opacity)
                 {
-                    Utils.SetWindowOpacity(Settings.Instance.WindowSettings.MainWindow.Opacity * 0.01f);
-                    LastPinnedOpacity = Settings.Instance.WindowSettings.MainWindow.Opacity;
+                    Utils.SetWindowOpacity(windowSettings.Opacity * 0.01f);
+                    LastPinnedOpacity = windowSettings.Opacity;
                 }
                 ImGui.PopStyleColor();
                 ImGui.PopFont();
@@ -355,7 +369,7 @@ namespace BPSR_ZDPS.Windows
                     {
                         SettingsRunOnceDelayedPerOpen++;
 
-                        if (IsTopMost)
+                        if (windowSettings.TopMost)
                         {
                             Utils.SetWindowTopmost();
                         }
@@ -505,8 +519,8 @@ namespace BPSR_ZDPS.Windows
                     ImGui.Separator();
                     if (ImGui.MenuItem("Exit"))
                     {
-                        Settings.Instance.WindowSettings.MainWindow.WindowPosition = WindowPosition;
-                        Settings.Instance.WindowSettings.MainWindow.WindowSize = WindowSize;
+                        windowSettings.WindowPosition = WindowPosition;
+                        windowSettings.WindowSize = WindowSize;
                         p_open = false;
                     }
                     ImGui.EndMenu();

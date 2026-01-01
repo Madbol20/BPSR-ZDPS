@@ -17,7 +17,6 @@ namespace BPSR_ZDPS.Windows
         public static string TITLE_ID = "###SpawnTrackerWindow";
         public static string TITLE = "Spawn Tracker";
         public static bool IsOpened = false;
-        public static bool IsTopMost = false;
         public static bool CollapseToContentOnly = false;
         public static Vector2 DefaultWindowSize = new Vector2(700, 600);
         public static bool ResetWindowSize = false;
@@ -92,17 +91,19 @@ namespace BPSR_ZDPS.Windows
                 return;
             }
 
+            var windowSettings = Settings.Instance.WindowSettings.SpawnTracker;
+
             ImGui.SetNextWindowSize(DefaultWindowSize, ImGuiCond.FirstUseEver);
             ImGui.SetNextWindowSizeConstraints(new Vector2(240, 140), new Vector2(ImGui.GETFLTMAX()));
 
-            if (Settings.Instance.WindowSettings.SpawnTracker.WindowPosition != new Vector2())
+            if (windowSettings.WindowPosition != new Vector2())
             {
-                ImGui.SetNextWindowPos(Settings.Instance.WindowSettings.SpawnTracker.WindowPosition, ImGuiCond.FirstUseEver);
+                ImGui.SetNextWindowPos(windowSettings.WindowPosition, ImGuiCond.FirstUseEver);
             }
 
-            if (Settings.Instance.WindowSettings.SpawnTracker.WindowSize != new Vector2())
+            if (windowSettings.WindowSize != new Vector2())
             {
-                ImGui.SetNextWindowSize(Settings.Instance.WindowSettings.SpawnTracker.WindowSize, ImGuiCond.FirstUseEver);
+                ImGui.SetNextWindowSize(windowSettings.WindowSize, ImGuiCond.FirstUseEver);
             }
 
             if (ResetWindowSize)
@@ -114,7 +115,7 @@ namespace BPSR_ZDPS.Windows
             ImGuiP.PushOverrideID(ImGuiP.ImHashStr(LAYER));
 
             ImGuiWindowFlags exWindowFlags = ImGuiWindowFlags.None;
-            if (AppState.MousePassthrough && IsTopMost)
+            if (AppState.MousePassthrough && windowSettings.TopMost)
             {
                 exWindowFlags |= ImGuiWindowFlags.NoInputs;
             }
@@ -131,18 +132,18 @@ namespace BPSR_ZDPS.Windows
                     Utils.SetCurrentWindowIcon();
                     Utils.BringWindowToFront();
 
-                    if (IsTopMost && !IsPinned)
+                    if (windowSettings.TopMost && !IsPinned)
                     {
                         IsPinned = true;
                         Utils.SetWindowTopmost();
-                        Utils.SetWindowOpacity(Settings.Instance.WindowSettings.SpawnTracker.Opacity * 0.01f);
-                        LastPinnedOpacity = Settings.Instance.WindowSettings.SpawnTracker.Opacity;
+                        Utils.SetWindowOpacity(windowSettings.Opacity * 0.01f);
+                        LastPinnedOpacity = windowSettings.Opacity;
                     }
                 }
 
                 DrawMenuBar();
 
-                float textScale = 18.0f * Settings.Instance.WindowSettings.SpawnTracker.TextScale;
+                float textScale = 18.0f * windowSettings.TextScale;
                 ImGui.PushFont(HelperMethods.Fonts["Segoe"], textScale);
 
                 if (BPTimerManager.SpawnDataLoaded == BPTimerManager.ESpawnDataLoadStatus.NotLoaded)
@@ -177,12 +178,12 @@ namespace BPSR_ZDPS.Windows
                     ImGui.SetCursorPosX(ImGui.GetContentRegionAvail().X);
                     ImGui.TextUnformatted("Region: ");
                     ImGui.SameLine();
-                    int selectedRegionIndex = Settings.Instance.WindowSettings.SpawnTracker.SelectedRegionIndex;
+                    int selectedRegionIndex = windowSettings.SelectedRegionIndex;
                     var regions = BPTimerManager.BPTimerRegions.ToArray();
                     ImGui.SetNextItemWidth(-1);
                     if (ImGui.Combo("##RegionSelectionCombo", ref selectedRegionIndex, regions, regions.Length))
                     {
-                        Settings.Instance.WindowSettings.SpawnTracker.SelectedRegionIndex = selectedRegionIndex;
+                        windowSettings.SelectedRegionIndex = selectedRegionIndex;
                         HasInitFilterList = false;
                     }
 
@@ -203,7 +204,7 @@ namespace BPSR_ZDPS.Windows
                             if (MonsterFilters.TryGetValue(mob.MobId, out var filterStatus))
                             {
                                 bool? savedStatus = null;
-                                if (Settings.Instance.WindowSettings.SpawnTracker.TrackedMonsters.TryGetValue(mob.MobId, out var saved))
+                                if (windowSettings.TrackedMonsters.TryGetValue(mob.MobId, out var saved))
                                 {
                                     savedStatus = saved;
                                     MonsterFilters[mob.MobId] = saved;
@@ -225,7 +226,7 @@ namespace BPSR_ZDPS.Windows
                                     MonsterFilters[mob.MobId] = isEnabled;
                                 }
 
-                                Settings.Instance.WindowSettings.SpawnTracker.TrackedMonsters[mob.MobId] = isEnabled;
+                                windowSettings.TrackedMonsters[mob.MobId] = isEnabled;
                             }
                         }
 
@@ -241,7 +242,7 @@ namespace BPSR_ZDPS.Windows
                     {
                         foreach (var item in MonsterFilters)
                         {
-                            Settings.Instance.WindowSettings.SpawnTracker.TrackedMonsters[item.Key] = true;
+                            windowSettings.TrackedMonsters[item.Key] = true;
                             MonsterFilters[item.Key] = true;
                         }
                     }
@@ -250,7 +251,7 @@ namespace BPSR_ZDPS.Windows
                     {
                         foreach (var item in MonsterFilters)
                         {
-                            Settings.Instance.WindowSettings.SpawnTracker.TrackedMonsters[item.Key] = false;
+                            windowSettings.TrackedMonsters[item.Key] = false;
                             MonsterFilters[item.Key] = false;
                         }
                     }
@@ -262,10 +263,10 @@ namespace BPSR_ZDPS.Windows
                     ImGui.SetNextItemWidth(-1);
                     ImGui.PushStyleColor(ImGuiCol.FrameBgHovered, ImGui.GetColorU32(ImGuiCol.FrameBgHovered, 0.55f));
                     ImGui.PushStyleColor(ImGuiCol.FrameBgActive, ImGui.GetColorU32(ImGuiCol.FrameBgActive, 0.55f));
-                    int displayCountLimit = Settings.Instance.WindowSettings.SpawnTracker.DisplayLineCountLimit;
+                    int displayCountLimit = windowSettings.DisplayLineCountLimit;
                     if (ImGui.SliderInt("##DisplayCountLimit", ref displayCountLimit, 0, 15, $"{(displayCountLimit == 0 ? "All" : displayCountLimit)}"))
                     {
-                        Settings.Instance.WindowSettings.SpawnTracker.DisplayLineCountLimit = displayCountLimit;
+                        windowSettings.DisplayLineCountLimit = displayCountLimit;
                     }
                     ImGui.PopStyleColor(2);
 
@@ -337,8 +338,8 @@ namespace BPSR_ZDPS.Windows
                             bool endedOnSameLine = false;
                             foreach (var status in statusDescriptors)
                             {
-                                float lineWidth = 50 * Settings.Instance.WindowSettings.SpawnTracker.LineScale;
-                                float lineHeight = 18.0f * Settings.Instance.WindowSettings.SpawnTracker.LineScale;
+                                float lineWidth = 50 * windowSettings.LineScale;
+                                float lineHeight = 18.0f * windowSettings.LineScale;
 
                                 int lineItemCount = (int)MathF.Floor(groupSize.X / (lineWidth + ImGui.GetStyle().ItemSpacing.X));
 
@@ -361,7 +362,7 @@ namespace BPSR_ZDPS.Windows
                                     isDead = true;
                                 }
 
-                                if(Settings.Instance.WindowSettings.SpawnTracker.DisplayLineCountLimit > 0 && Settings.Instance.WindowSettings.SpawnTracker.DisplayLineCountLimit < currentItemCount)
+                                if(windowSettings.DisplayLineCountLimit > 0 && windowSettings.DisplayLineCountLimit < currentItemCount)
                                 {
                                     continue;
                                 }
@@ -430,7 +431,7 @@ namespace BPSR_ZDPS.Windows
                                             var tex = ImageArchive.LoadImage(Path.Combine("BPTimer", "Maps", $"{status.MonsterId}_{status.Location}"));
                                             if (tex != null)
                                             {
-                                                float texSize = 128.0f * Settings.Instance.WindowSettings.SpawnTracker.TextScale;
+                                                float texSize = 128.0f * windowSettings.TextScale;
                                                 ImGui.Image((ImTextureRef)tex, new Vector2(texSize, texSize));
                                             }
                                         }
@@ -485,6 +486,8 @@ namespace BPSR_ZDPS.Windows
         {
             if (ImGui.BeginMenuBar())
             {
+                var windowSettings = Settings.Instance.WindowSettings.SpawnTracker;
+
                 MenuBarSize = ImGui.GetWindowSize();
 
                 ImGui.Text($"{TITLE}");
@@ -507,29 +510,29 @@ namespace BPSR_ZDPS.Windows
 
                 ImGui.SetCursorPosX(MenuBarSize.X - (MenuBarButtonWidth * 3));
                 ImGui.PushFont(HelperMethods.Fonts["FASIcons"], ImGui.GetFontSize());
-                ImGui.PushStyleColor(ImGuiCol.Text, new Vector4(1.0f, AppState.MousePassthrough ? 0.0f : 1.0f, AppState.MousePassthrough ? 0.0f : 1.0f, IsTopMost ? 1.0f : 0.5f));
+                ImGui.PushStyleColor(ImGuiCol.Text, new Vector4(1.0f, AppState.MousePassthrough ? 0.0f : 1.0f, AppState.MousePassthrough ? 0.0f : 1.0f, windowSettings.TopMost ? 1.0f : 0.5f));
                 if (ImGui.MenuItem($"{FASIcons.Thumbtack}##TopMostBtn"))
                 {
-                    if (!IsTopMost)
+                    if (!windowSettings.TopMost)
                     {
                         Utils.SetWindowTopmost();
-                        Utils.SetWindowOpacity(Settings.Instance.WindowSettings.SpawnTracker.Opacity * 0.01f);
-                        LastPinnedOpacity = Settings.Instance.WindowSettings.SpawnTracker.Opacity;
-                        IsTopMost = true;
+                        Utils.SetWindowOpacity(windowSettings.Opacity * 0.01f);
+                        LastPinnedOpacity = windowSettings.Opacity;
+                        windowSettings.TopMost = true;
                         IsPinned = true;
                     }
                     else
                     {
                         Utils.UnsetWindowTopmost();
                         Utils.SetWindowOpacity(1.0f);
-                        IsTopMost = false;
+                        windowSettings.TopMost = false;
                         IsPinned = false;
                     }
                 }
-                if (IsTopMost && LastPinnedOpacity != Settings.Instance.WindowSettings.SpawnTracker.Opacity)
+                if (windowSettings.TopMost && LastPinnedOpacity != windowSettings.Opacity)
                 {
-                    Utils.SetWindowOpacity(Settings.Instance.WindowSettings.SpawnTracker.Opacity * 0.01f);
-                    LastPinnedOpacity = Settings.Instance.WindowSettings.SpawnTracker.Opacity;
+                    Utils.SetWindowOpacity(windowSettings.Opacity * 0.01f);
+                    LastPinnedOpacity = windowSettings.Opacity;
                 }
                 ImGui.PopStyleColor();
                 ImGui.PopFont();
@@ -558,8 +561,8 @@ namespace BPSR_ZDPS.Windows
                 ImGui.PushFont(HelperMethods.Fonts["FASIcons"], ImGui.GetFontSize());
                 if (ImGui.MenuItem($"X##CloseBtn"))
                 {
-                    Settings.Instance.WindowSettings.SpawnTracker.WindowPosition = ImGui.GetWindowPos();
-                    Settings.Instance.WindowSettings.SpawnTracker.WindowSize = ImGui.GetWindowSize();
+                    windowSettings.WindowPosition = ImGui.GetWindowPos();
+                    windowSettings.WindowSize = ImGui.GetWindowSize();
                     IsOpened = false;
                 }
                 ImGui.PopFont();

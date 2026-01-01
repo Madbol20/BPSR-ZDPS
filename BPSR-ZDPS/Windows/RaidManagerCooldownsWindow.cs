@@ -16,7 +16,6 @@ namespace BPSR_ZDPS.Windows
         public static string TITLE_ID = "###RaidManagerCooldownPriorityTrackerWindow";
         public static string TITLE = "Cooldown Priority Tracker";
         public static bool IsOpened = false;
-        public static bool IsTopMost = false;
         public static bool CollapseToContentOnly = false;
         public static Vector2 DefaultWindowSize = new Vector2(700, 600);
         public static bool ResetWindowSize = false;
@@ -93,17 +92,19 @@ namespace BPSR_ZDPS.Windows
                 return;
             }
 
+            var windowSettings = Settings.Instance.WindowSettings.RaidManagerCooldowns;
+
             ImGui.SetNextWindowSize(DefaultWindowSize, ImGuiCond.FirstUseEver);
             ImGui.SetNextWindowSizeConstraints(new Vector2(300, 240), new Vector2(ImGui.GETFLTMAX()));
 
-            if (Settings.Instance.WindowSettings.RaidManagerCooldowns.WindowPosition != new Vector2())
+            if (windowSettings.WindowPosition != new Vector2())
             {
-                ImGui.SetNextWindowPos(Settings.Instance.WindowSettings.RaidManagerCooldowns.WindowPosition, ImGuiCond.FirstUseEver);
+                ImGui.SetNextWindowPos(windowSettings.WindowPosition, ImGuiCond.FirstUseEver);
             }
 
-            if (Settings.Instance.WindowSettings.RaidManagerCooldowns.WindowSize != new Vector2())
+            if (windowSettings.WindowSize != new Vector2())
             {
-                ImGui.SetNextWindowSize(Settings.Instance.WindowSettings.RaidManagerCooldowns.WindowSize, ImGuiCond.FirstUseEver);
+                ImGui.SetNextWindowSize(windowSettings.WindowSize, ImGuiCond.FirstUseEver);
             }
 
             if (ResetWindowSize)
@@ -115,7 +116,7 @@ namespace BPSR_ZDPS.Windows
             ImGuiP.PushOverrideID(ImGuiP.ImHashStr(LAYER));
 
             ImGuiWindowFlags exWindowFlags = ImGuiWindowFlags.None;
-            if (AppState.MousePassthrough && IsTopMost)
+            if (AppState.MousePassthrough && windowSettings.TopMost)
             {
                 exWindowFlags |= ImGuiWindowFlags.NoInputs;
             }
@@ -132,12 +133,12 @@ namespace BPSR_ZDPS.Windows
                     Utils.SetCurrentWindowIcon();
                     Utils.BringWindowToFront();
 
-                    if (IsTopMost && !IsPinned)
+                    if (windowSettings.TopMost && !IsPinned)
                     {
                         IsPinned = true;
                         Utils.SetWindowTopmost();
-                        Utils.SetWindowOpacity(Settings.Instance.WindowSettings.RaidManagerCooldowns.Opacity * 0.01f);
-                        LastPinnedOpacity = Settings.Instance.WindowSettings.RaidManagerCooldowns.Opacity;
+                        Utils.SetWindowOpacity(windowSettings.Opacity * 0.01f);
+                        LastPinnedOpacity = windowSettings.Opacity;
                     }
                 }
 
@@ -256,7 +257,7 @@ namespace BPSR_ZDPS.Windows
                                     var cursorPos = ImGui.GetCursorPos();
 
                                     string remainingTimeFormat = remainingTime.ToString(@"hh\:mm\:ss\.ff");
-                                    if (Settings.Instance.WindowSettings.RaidManagerCooldowns.DisplayCooldownRemainingAsSeconds)
+                                    if (windowSettings.DisplayCooldownRemainingAsSeconds)
                                     {
                                         remainingTimeFormat = Math.Round(remainingTime.TotalSeconds, 2).ToString("0.00");
                                     }
@@ -310,9 +311,9 @@ namespace BPSR_ZDPS.Windows
                     delayMoveDirection = -1;
                     if (ImGui.BeginPopupContextWindow("##CooldownTrackerListContextMenu"))
                     {
-                        if (ImGui.MenuItem("Display Cooldown Remaining As Seconds", Settings.Instance.WindowSettings.RaidManagerCooldowns.DisplayCooldownRemainingAsSeconds))
+                        if (ImGui.MenuItem("Display Cooldown Remaining As Seconds", windowSettings.DisplayCooldownRemainingAsSeconds))
                         {
-                            Settings.Instance.WindowSettings.RaidManagerCooldowns.DisplayCooldownRemainingAsSeconds = !Settings.Instance.WindowSettings.RaidManagerCooldowns.DisplayCooldownRemainingAsSeconds;
+                            windowSettings.DisplayCooldownRemainingAsSeconds = !windowSettings.DisplayCooldownRemainingAsSeconds;
                         }
                         ImGui.EndPopup();
                     }
@@ -530,6 +531,8 @@ namespace BPSR_ZDPS.Windows
         {
             if (ImGui.BeginMenuBar())
             {
+                var windowSettings = Settings.Instance.WindowSettings.RaidManagerCooldowns;
+
                 MenuBarSize = ImGui.GetWindowSize();
 
                 ImGui.Text($"Raid Manager - {TITLE}");
@@ -551,29 +554,29 @@ namespace BPSR_ZDPS.Windows
 
                 ImGui.SetCursorPosX(MenuBarSize.X - (MenuBarButtonWidth * 3));
                 ImGui.PushFont(HelperMethods.Fonts["FASIcons"], ImGui.GetFontSize());
-                ImGui.PushStyleColor(ImGuiCol.Text, new Vector4(1.0f, AppState.MousePassthrough ? 0.0f : 1.0f, AppState.MousePassthrough ? 0.0f : 1.0f, IsTopMost ? 1.0f : 0.5f));
+                ImGui.PushStyleColor(ImGuiCol.Text, new Vector4(1.0f, AppState.MousePassthrough ? 0.0f : 1.0f, AppState.MousePassthrough ? 0.0f : 1.0f, windowSettings.TopMost ? 1.0f : 0.5f));
                 if (ImGui.MenuItem($"{FASIcons.Thumbtack}##TopMostBtn"))
                 {
-                    if (!IsTopMost)
+                    if (!windowSettings.TopMost)
                     {
                         Utils.SetWindowTopmost();
-                        Utils.SetWindowOpacity(Settings.Instance.WindowSettings.RaidManagerCooldowns.Opacity * 0.01f);
-                        LastPinnedOpacity = Settings.Instance.WindowSettings.RaidManagerCooldowns.Opacity;
-                        IsTopMost = true;
+                        Utils.SetWindowOpacity(windowSettings.Opacity * 0.01f);
+                        LastPinnedOpacity = windowSettings.Opacity;
+                        windowSettings.TopMost = true;
                         IsPinned = true;
                     }
                     else
                     {
                         Utils.UnsetWindowTopmost();
                         Utils.SetWindowOpacity(1.0f);
-                        IsTopMost = false;
+                        windowSettings.TopMost = false;
                         IsPinned = true;
                     }
                 }
-                if (IsTopMost && LastPinnedOpacity != Settings.Instance.WindowSettings.RaidManagerCooldowns.Opacity)
+                if (windowSettings.TopMost && LastPinnedOpacity != windowSettings.Opacity)
                 {
-                    Utils.SetWindowOpacity(Settings.Instance.WindowSettings.RaidManagerCooldowns.Opacity * 0.01f);
-                    LastPinnedOpacity = Settings.Instance.WindowSettings.RaidManagerCooldowns.Opacity;
+                    Utils.SetWindowOpacity(windowSettings.Opacity * 0.01f);
+                    LastPinnedOpacity = windowSettings.Opacity;
                 }
                 ImGui.PopStyleColor();
                 ImGui.PopFont();
@@ -602,8 +605,8 @@ namespace BPSR_ZDPS.Windows
                 ImGui.PushFont(HelperMethods.Fonts["FASIcons"], ImGui.GetFontSize());
                 if (ImGui.MenuItem($"X##CloseBtn"))
                 {
-                    Settings.Instance.WindowSettings.RaidManagerCooldowns.WindowPosition = ImGui.GetWindowPos();
-                    Settings.Instance.WindowSettings.RaidManagerCooldowns.WindowSize = ImGui.GetWindowSize();
+                    windowSettings.WindowPosition = ImGui.GetWindowPos();
+                    windowSettings.WindowSize = ImGui.GetWindowSize();
                     IsOpened = false;
                 }
                 ImGui.PopFont();

@@ -18,7 +18,6 @@ namespace BPSR_ZDPS
         public static string TITLE_ID = "###EntityCacheViewerWindow";
         public static string TITLE = "Entity Cache Viewer";
         public static bool IsOpened = false;
-        public static bool IsTopMost = false;
         public static bool CollapseToContentOnly = false;
         public static Vector2 DefaultWindowSize = new Vector2(700, 600);
         public static bool ResetWindowSize = false;
@@ -58,12 +57,14 @@ namespace BPSR_ZDPS
                 return;
             }
 
+            var windowSettings = Settings.Instance.WindowSettings.EntityCacheViewer;
+
             ImGui.SetNextWindowSize(DefaultWindowSize, ImGuiCond.FirstUseEver);
             ImGui.SetNextWindowSizeConstraints(new Vector2(300, 300), new Vector2(ImGui.GETFLTMAX()));
 
-            if (Settings.Instance.WindowSettings.SpawnTracker.WindowSize != new Vector2())
+            if (windowSettings.WindowSize != new Vector2())
             {
-                ImGui.SetNextWindowSize(Settings.Instance.WindowSettings.SpawnTracker.WindowSize, ImGuiCond.FirstUseEver);
+                ImGui.SetNextWindowSize(windowSettings.WindowSize, ImGuiCond.FirstUseEver);
             }
 
             if (ResetWindowSize)
@@ -75,7 +76,7 @@ namespace BPSR_ZDPS
             ImGuiP.PushOverrideID(ImGuiP.ImHashStr(LAYER));
 
             ImGuiWindowFlags exWindowFlags = ImGuiWindowFlags.None;
-            if (AppState.MousePassthrough && IsTopMost)
+            if (AppState.MousePassthrough && windowSettings.TopMost)
             {
                 exWindowFlags |= ImGuiWindowFlags.NoInputs;
             }
@@ -92,12 +93,12 @@ namespace BPSR_ZDPS
                     Utils.SetCurrentWindowIcon();
                     Utils.BringWindowToFront();
 
-                    if (IsTopMost && !IsPinned)
+                    if (windowSettings.TopMost && !IsPinned)
                     {
                         IsPinned = true;
                         Utils.SetWindowTopmost();
-                        Utils.SetWindowOpacity(Settings.Instance.WindowSettings.EntityCacheViewer.Opacity * 0.01f);
-                        LastPinnedOpacity = Settings.Instance.WindowSettings.EntityCacheViewer.Opacity;
+                        Utils.SetWindowOpacity(windowSettings.Opacity * 0.01f);
+                        LastPinnedOpacity = windowSettings.Opacity;
                     }
                 }
 
@@ -151,35 +152,37 @@ namespace BPSR_ZDPS
         {
             if (ImGui.BeginMenuBar())
             {
+                var windowSettings = Settings.Instance.WindowSettings.EntityCacheViewer;
+
                 MenuBarSize = ImGui.GetWindowSize();
 
                 ImGui.Text($"{TITLE}");
 
                 ImGui.SetCursorPosX(MenuBarSize.X - (MenuBarButtonWidth * 3));
                 ImGui.PushFont(HelperMethods.Fonts["FASIcons"], ImGui.GetFontSize());
-                ImGui.PushStyleColor(ImGuiCol.Text, new Vector4(1.0f, AppState.MousePassthrough ? 0.0f : 1.0f, AppState.MousePassthrough ? 0.0f : 1.0f, IsTopMost ? 1.0f : 0.5f));
+                ImGui.PushStyleColor(ImGuiCol.Text, new Vector4(1.0f, AppState.MousePassthrough ? 0.0f : 1.0f, AppState.MousePassthrough ? 0.0f : 1.0f, windowSettings.TopMost ? 1.0f : 0.5f));
                 if (ImGui.MenuItem($"{FASIcons.Thumbtack}##TopMostBtn"))
                 {
-                    if (!IsTopMost)
+                    if (!windowSettings.TopMost)
                     {
                         Utils.SetWindowTopmost();
-                        Utils.SetWindowOpacity(Settings.Instance.WindowSettings.EntityCacheViewer.Opacity * 0.01f);
-                        LastPinnedOpacity = Settings.Instance.WindowSettings.EntityCacheViewer.Opacity;
-                        IsTopMost = true;
+                        Utils.SetWindowOpacity(windowSettings.Opacity * 0.01f);
+                        LastPinnedOpacity = windowSettings.Opacity;
+                        windowSettings.TopMost = true;
                         IsPinned = true;
                     }
                     else
                     {
                         Utils.UnsetWindowTopmost();
                         Utils.SetWindowOpacity(1.0f);
-                        IsTopMost = false;
+                        windowSettings.TopMost = false;
                         IsPinned = false;
                     }
                 }
-                if (IsTopMost && LastPinnedOpacity != Settings.Instance.WindowSettings.EntityCacheViewer.Opacity)
+                if (windowSettings.TopMost && LastPinnedOpacity != windowSettings.Opacity)
                 {
-                    Utils.SetWindowOpacity(Settings.Instance.WindowSettings.EntityCacheViewer.Opacity * 0.01f);
-                    LastPinnedOpacity = Settings.Instance.WindowSettings.EntityCacheViewer.Opacity;
+                    Utils.SetWindowOpacity(windowSettings.Opacity * 0.01f);
+                    LastPinnedOpacity = windowSettings.Opacity;
                 }
                 ImGui.PopStyleColor();
                 ImGui.PopFont();
@@ -208,7 +211,7 @@ namespace BPSR_ZDPS
                 ImGui.PushFont(HelperMethods.Fonts["FASIcons"], ImGui.GetFontSize());
                 if (ImGui.MenuItem($"X##CloseBtn"))
                 {
-                    Settings.Instance.WindowSettings.SpawnTracker.WindowSize = ImGui.GetWindowSize();
+                    windowSettings.WindowSize = ImGui.GetWindowSize();
                     IsOpened = false;
                 }
                 ImGui.PopFont();

@@ -73,6 +73,7 @@ namespace BPSR_ZDPS
                 ImGui.Separator();
                 ImGui.NewLine();
 
+                ImGui.PushStyleColor(ImGuiCol.Button, Colors.DarkGreen_Transparent);
                 if (ImGui.Button("Go To Update Website", new Vector2(250, 0)))
                 {
                     try
@@ -90,14 +91,17 @@ namespace BPSR_ZDPS
                     
                     ImGui.CloseCurrentPopup();
                 }
+                ImGui.PopStyleColor();
                 ImGui.SetItemTooltip($"Click to open [ {Settings.Instance.ZDPSWebsiteURL} ]");
 
                 ImGui.SameLine(ImGui.GetContentRegionAvail().X - 250);
 
+                ImGui.PushStyleColor(ImGuiCol.Button, Colors.DarkRed_Transparent);
                 if (ImGui.Button("Remind Me Later", new Vector2(250, 0)))
                 {
                     ImGui.CloseCurrentPopup();
                 }
+                ImGui.PopStyleColor();
 
                 ImGui.EndPopup();
             }
