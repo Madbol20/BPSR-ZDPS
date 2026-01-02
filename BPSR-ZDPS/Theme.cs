@@ -202,7 +202,6 @@ namespace BPSR_ZDPS
             style.GrabRounding = 0;
             style.TabRounding = 0;
 
-            // This makes it easier to grab the window borders for resizing
             style.WindowBorderHoverPadding = 8;
         }
 
@@ -293,7 +292,6 @@ namespace BPSR_ZDPS
             style.GrabRounding = 0;
             style.TabRounding = 0;
 
-            // This makes it easier to grab the window borders for resizing
             style.WindowBorderHoverPadding = 8;
         }
 

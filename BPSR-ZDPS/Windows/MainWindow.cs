@@ -43,7 +43,6 @@ namespace BPSR_ZDPS.Windows
         public Vector2 WindowSize;
         public Vector2 NextWindowSize = new();
 
-        // Single-meter mode state
         private bool _isSingleMeterMode = false;
         private MeterBase _singleMeterModeMeter = null;
         private bool _singleMeterModeWasTopMost = false;
@@ -77,32 +76,26 @@ namespace BPSR_ZDPS.Windows
             var io = ImGui.GetIO();
             var main_viewport = ImGui.GetMainViewport();
 
-            // Auto-exit and auto-reentry logic for single-meter mode
             bool hasActiveEncounter = EncounterManager.Current != null && EncounterManager.Current.HasStatsBeenRecorded();
 
-            // Auto-exit to full mode in single-meter mode when no encounter (prevents disturbing gameplay)
             if (_isSingleMeterMode && !hasActiveEncounter)
             {
-                ExitSingleMeterMode(restoreTopmost: false, cancelAutoReentry: false); // Keep auto-reentry enabled
+                ExitSingleMeterMode(restoreTopmost: false, cancelAutoReentry: false);
             }
 
-            // Auto-reenter single-meter mode when encounter starts (if auto-reentry is enabled)
             if (!_isSingleMeterMode && _singleMeterModeAutoReentryEnabled && hasActiveEncounter)
             {
-                // Find the meter by name
                 var meter = Meters.FirstOrDefault(m => m.Name == Settings.Instance.WindowSettings.MainWindow.SingleMeterModeMeterName);
                 if (meter != null)
                 {
-                    EnterSingleMeterMode(meter, enableAutoReentry: true); // Re-enter with auto-reentry still enabled
+                    EnterSingleMeterMode(meter, enableAutoReentry: true);
                 }
             }
 
-            // Window size constraints
             ImGui.SetNextWindowSizeConstraints(new Vector2(375, 150), new Vector2(ImGui.GETFLTMAX()));
 
             if (_isSingleMeterMode)
             {
-                // Use single-meter mode position/size
                 if (Settings.Instance.WindowSettings.MainWindow.SingleMeterModeWindowPosition != new Vector2())
                 {
                     ImGui.SetNextWindowPos(Settings.Instance.WindowSettings.MainWindow.SingleMeterModeWindowPosition, _justSwitchedMode ? ImGuiCond.Always : ImGuiCond.FirstUseEver);
@@ -114,7 +107,6 @@ namespace BPSR_ZDPS.Windows
             }
             else
             {
-                // Use full-mode position/size
                 ImGui.SetNextWindowSize(DefaultWindowSize, ImGuiCond.FirstUseEver);
                 if (Settings.Instance.WindowSettings.MainWindow.WindowPosition != new Vector2())
                 {
@@ -147,12 +139,10 @@ namespace BPSR_ZDPS.Windows
             ImGuiWindowFlags window_flags;
             if (_isSingleMeterMode)
             {
-                // Single-meter mode: no scrollbar
                 window_flags = ImGuiWindowFlags.NoCollapse | ImGuiWindowFlags.MenuBar | ImGuiWindowFlags.NoTitleBar | ImGuiWindowFlags.NoDocking | ImGuiWindowFlags.NoScrollbar | exWindowFlags;
             }
             else
             {
-                // Full mode
                 window_flags = ImGuiWindowFlags.NoCollapse | ImGuiWindowFlags.MenuBar | ImGuiWindowFlags.NoTitleBar | ImGuiWindowFlags.NoDocking | exWindowFlags;
             }
             
@@ -171,15 +161,12 @@ namespace BPSR_ZDPS.Windows
             WindowPosition = ImGui.GetWindowPos();
             WindowSize = ImGui.GetWindowSize();
 
-            // Reset the just-switched flag after first frame
             if (_justSwitchedMode)
                 _justSwitchedMode = false;
 
-            // Track window interaction for position/size saving
             if (ImGui.IsWindowHovered() && ImGui.IsMouseDragging(ImGuiMouseButton.Left, 0))
             {
                 _isInteractingWithWindow = true;
-                // Save position/size during interaction
                 if (_isSingleMeterMode)
                 {
                     Settings.Instance.WindowSettings.MainWindow.SingleMeterModeWindowPosition = WindowPosition;
@@ -203,7 +190,6 @@ namespace BPSR_ZDPS.Windows
             {
                 RunOnce = false;
 
-                // This includes string files and caches
                 AppState.LoadDataTables();
 
                 Settings.Instance.Apply();
@@ -261,7 +247,6 @@ namespace BPSR_ZDPS.Windows
                 {
                     if (Settings.Instance.External.BPTimerSettings.ExternalBPTimerFieldBossHpReportsEnabled)
                     {
-                        // Attempt to update our supported mob list with data from the BPTimer server
                         Managers.External.BPTimerManager.FetchSupportedMobList();
                     }
                 }
@@ -311,7 +296,6 @@ namespace BPSR_ZDPS.Windows
                 UpdateAvailableWindow.Open();
             }
 
-            // Single-meter mode delayed initialization
             if (_isSingleMeterMode && _singleMeterModeRunOnceDelayed == 0)
             {
                 _singleMeterModeRunOnceDelayed++;
@@ -326,10 +310,8 @@ namespace BPSR_ZDPS.Windows
                 }
             }
 
-            // Content rendering - conditional based on mode
             if (_isSingleMeterMode)
             {
-                // Single-meter mode: simplified menu bar + single meter
                 if (_singleMeterModeMeter != null)
                 {
                     ImGui.PushStyleVar(ImGuiStyleVar.ScrollbarSize, 0f);
@@ -339,7 +321,6 @@ namespace BPSR_ZDPS.Windows
             }
             else
             {
-                // Full mode: tab rendering
                 ImGuiTableFlags table_flags = ImGuiTableFlags.SizingStretchSame;
                 if (ImGui.BeginTable("##MetersTable", Meters.Count, table_flags))
                 {
@@ -363,7 +344,6 @@ namespace BPSR_ZDPS.Windows
                             SelectedTabIndex = i;
                         }
 
-                        // Right-click to enter single-meter mode
                         if (ImGui.IsItemHovered() && ImGui.IsMouseReleased(ImGuiMouseButton.Right))
                         {
                             EnterSingleMeterMode(Meters[i]);
@@ -417,7 +397,6 @@ namespace BPSR_ZDPS.Windows
 
         void DrawSingleMeterModeMenuBar()
         {
-            // Simplified menu bar (similar to DetachableMeterWindow)
             var current = EncounterManager.Current;
             if (current != null)
             {
@@ -447,7 +426,6 @@ namespace BPSR_ZDPS.Windows
                 ImGui.Text("Status: (No encounter)");
             }
 
-            // Right-click to return to full mode (manually, cancels auto-reentry)
             if (ImGui.IsWindowHovered() && ImGui.IsMouseReleased(ImGuiMouseButton.Right))
             {
                 ExitSingleMeterMode(restoreTopmost: true, cancelAutoReentry: true);
@@ -460,8 +438,6 @@ namespace BPSR_ZDPS.Windows
 
             if (Utils.AppVersion != null)
             {
-                //ImGui.SetCursorPosX(MainMenuBarSize.X - (35 * 5)); // This pushes it against the previous button instead of having a gap
-                //ImGui.SetCursorPosX(ImGui.GetContentRegionAvail().X); // This loosely locks it to right side
                 ImGui.TextDisabled($"v{Utils.AppVersion}");
             }
 
@@ -501,7 +477,6 @@ namespace BPSR_ZDPS.Windows
             ImGui.PopFont();
             ImGui.SetItemTooltip("Pin Window As Top Most");
 
-            // Create new Encounter button
             ImGui.SetCursorPosX(MainMenuBarSize.X - (settingsWidth * 2));
             ImGui.PushFont(HelperMethods.Fonts["FASIcons"], ImGui.GetFontSize());
             if (ImGui.MenuItem($"{FASIcons.Rotate}##StartNewEncounterBtn"))
@@ -574,7 +549,6 @@ namespace BPSR_ZDPS.Windows
                         }
                         else if (benchmarkTime > 1200)
                         {
-                            // Limit to 1200 Seconds (20 minutes)
                             benchmarkTime = 1200;
                         }
                         AppState.BenchmarkTime = benchmarkTime;
@@ -684,11 +658,9 @@ namespace BPSR_ZDPS.Windows
             ImGui.Text("Status:");
 
             ImGui.SameLine();
-            // Self position in current displayed meter list
             ImGui.Text($"[{AppState.PlayerMeterPlacement}]");
 
             ImGui.SameLine();
-            // Duration of current encounter
             string duration = "00:00:00";
             if (EncounterManager.Current?.GetDuration().TotalSeconds > 0)
             {
@@ -711,7 +683,6 @@ namespace BPSR_ZDPS.Windows
                     subName = $" ({EncounterManager.Current.SceneSubName})";
                 }
 
-                // We don't need to prefix with a space due to actual item spacing handling it for us
                 ImGui.TextUnformatted($"- {EncounterManager.Current.SceneName}{subName}");
             }
 
@@ -740,11 +711,9 @@ namespace BPSR_ZDPS.Windows
         {
             if (meter == null) return;
 
-            // Save current full-mode position/size
             Settings.Instance.WindowSettings.MainWindow.WindowPosition = WindowPosition;
             Settings.Instance.WindowSettings.MainWindow.WindowSize = WindowSize;
 
-            // Remember topmost state and enable topmost for single-meter mode
             _singleMeterModeWasTopMost = IsTopMost;
             Settings.Instance.WindowSettings.MainWindow.SingleMeterModeWasTopMost = IsTopMost;
 
@@ -760,7 +729,6 @@ namespace BPSR_ZDPS.Windows
 
             _justSwitchedMode = true;
 
-            // Always enable topmost when entering single-meter mode
             if (!IsTopMost)
             {
                 Utils.SetWindowTopmost();
@@ -773,14 +741,12 @@ namespace BPSR_ZDPS.Windows
         {
             if (!_isSingleMeterMode) return;
 
-            // Save single-meter mode position/size
             Settings.Instance.WindowSettings.MainWindow.SingleMeterModeWindowPosition = WindowPosition;
             Settings.Instance.WindowSettings.MainWindow.SingleMeterModeWindowSize = WindowSize;
 
             _isSingleMeterMode = false;
             _singleMeterModeMeter = null;
 
-            // Cancel auto-reentry if user manually exited (right-click menu bar)
             if (cancelAutoReentry)
             {
                 _singleMeterModeAutoReentryEnabled = false;
@@ -793,7 +759,6 @@ namespace BPSR_ZDPS.Windows
 
             _justSwitchedMode = true;
 
-            // Restore topmost state to what it was before entering single-meter mode
             if (restoreTopmost)
             {
                 if (_singleMeterModeWasTopMost && !IsTopMost)
@@ -811,7 +776,6 @@ namespace BPSR_ZDPS.Windows
             }
             else
             {
-                // Always disable topmost when auto-exiting (no encounter)
                 if (IsTopMost)
                 {
                     Utils.UnsetWindowTopmost();
@@ -836,7 +800,6 @@ namespace BPSR_ZDPS.Windows
     {
         public float MeterBarScale = 1.0f;
 
-        // Single-meter mode settings
         public bool IsSingleMeterMode = false;
         public string SingleMeterModeMeterName = "";
         public Vector2 SingleMeterModeWindowPosition = new();
