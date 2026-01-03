@@ -13,45 +13,47 @@ jobs:
     runs-on: windows-latest
 
     steps:
-      # ---------------------------------------------
+      # -------------------------------------------------
       # Checkout repository
-      # ---------------------------------------------
+      # -------------------------------------------------
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      # ---------------------------------------------
+      # -------------------------------------------------
       # Setup .NET
-      # ---------------------------------------------
-      - name: Setup .NET 8
+      # -------------------------------------------------
+      - name: Setup .NET
         uses: actions/setup-dotnet@v3
         with:
           dotnet-version: 8.0.x
 
-      # ---------------------------------------------
-      # Generate version + tag
-      # ---------------------------------------------
-      - name: Generate version
-        id: version
+      # -------------------------------------------------
+      # Generate versions
+      # -------------------------------------------------
+      - name: Generate versions
         shell: pwsh
         run: |
-          $date = Get-Date -Format "yyyy-MM-dd"
+          $dateTag = Get-Date -Format "yyyy-MM-dd"
+          $dateDotnet = Get-Date -Format "yyyy.MM.dd"
           $run = "${{ github.run_number }}"
-          $version = "v.$date.r$run"
 
-          echo "VERSION=$version" >> $env:GITHUB_ENV
-          echo "version=$version" >> $env:GITHUB_OUTPUT
+          $releaseVersion = "v.$dateTag.r$run"
+          $dotnetVersion = "$dateDotnet.$run"
 
-      # ---------------------------------------------
-      # Restore dependencies
-      # ---------------------------------------------
+          echo "RELEASE_VERSION=$releaseVersion" >> $env:GITHUB_ENV
+          echo "DOTNET_VERSION=$dotnetVersion" >> $env:GITHUB_ENV
+
+      # -------------------------------------------------
+      # Restore dependencies (numeric version ONLY)
+      # -------------------------------------------------
       - name: Restore dependencies
-        run: dotnet restore
+        run: dotnet restore -p:Version=${{ env.DOTNET_VERSION }}
 
-      # ---------------------------------------------
-      # Build & publish (your existing logic)
-      # ---------------------------------------------
+      # -------------------------------------------------
+      # Publish application
+      # -------------------------------------------------
       - name: Publish application
         shell: pwsh
         run: |
@@ -59,6 +61,7 @@ jobs:
             -r win-x64 `
             -c Release `
             -o ./publish `
+            -p:Version=${{ env.DOTNET_VERSION }} `
             -p:PublishSingleFile=true `
             -p:PublishTrimmed=false `
             -p:TrimMode=link `
@@ -71,44 +74,44 @@ jobs:
             Remove-Item "publish\*.pdb" -Force
           }
 
-      # ---------------------------------------------
-      # Zip output
-      # ---------------------------------------------
-      - name: Create ZIP package
+      # -------------------------------------------------
+      # Create ZIP package
+      # -------------------------------------------------
+      - name: Create ZIP
         shell: pwsh
         run: |
           Compress-Archive `
             -Path publish\* `
-            -DestinationPath "ZDPS-${{ env.VERSION }}-win-x64.zip"
+            -DestinationPath "ZDPS-${{ env.RELEASE_VERSION }}-win-x64.zip"
 
-      # ---------------------------------------------
-      # Upload workflow artifact (optional but useful)
-      # ---------------------------------------------
-      - name: Upload build artifact
+      # -------------------------------------------------
+      # Upload artifact (workflow storage)
+      # -------------------------------------------------
+      - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: ZDPS-${{ env.VERSION }}
-          path: ZDPS-${{ env.VERSION }}-win-x64.zip
+          name: ZDPS-${{ env.RELEASE_VERSION }}
+          path: ZDPS-${{ env.RELEASE_VERSION }}-win-x64.zip
 
-      # ---------------------------------------------
-      # Create GitHub Release + tag automatically
-      # ---------------------------------------------
+      # -------------------------------------------------
+      # Create GitHub Release (auto tag)
+      # -------------------------------------------------
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ env.VERSION }}
-          name: ZDPS ${{ env.VERSION }}
+          tag_name: ${{ env.RELEASE_VERSION }}
+          name: ZDPS ${{ env.RELEASE_VERSION }}
           body: |
             ## BPSR ZDPS Release
 
-            **Version:** `${{ env.VERSION }}`
-            **Platform:** Windows x64  
+            **Version:** `${{ env.RELEASE_VERSION }}`
+            **Dotnet Version:** `${{ env.DOTNET_VERSION }}`
+            **Platform:** Windows x64
             **Build:** GitHub Actions
 
-            ### Changes
-            - Automated build & release
-            - Single-file .NET 8 publish
-            - No debug symbols
-
+            ### Notes
+            - Automatic versioning
+            - Single-file .NET publish
+            - Debug symbols removed
           files: |
-            ZDPS-${{ env.VERSION }}-win-x64.zip
+            ZDPS-${{ env.RELEASE_VERSION }}-win-x64.zip
