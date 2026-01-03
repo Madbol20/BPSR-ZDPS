@@ -1,66 +1,114 @@
-name: .NET Auto Release
+name: ZDPS Release
 
 on:
   push:
-    branches: ["master"]
+    branches:
+      - master
 
 permissions:
   contents: write
 
 jobs:
-  build-release:
+  build-and-release:
     runs-on: windows-latest
 
     steps:
-      - name: Checkout
+      # ---------------------------------------------
+      # Checkout repository
+      # ---------------------------------------------
+      - name: Checkout repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - name: Setup .NET
-        uses: actions/setup-dotnet@v4
+      # ---------------------------------------------
+      # Setup .NET
+      # ---------------------------------------------
+      - name: Setup .NET 8
+        uses: actions/setup-dotnet@v3
         with:
           dotnet-version: 8.0.x
 
-      - name: Restore dependencies
-        run: dotnet restore
-
-      - name: Build & Publish
-        shell: cmd
-        run: |
-          dotnet publish "BPSR-ZDPS/BPSR-ZDPS.csproj" ^
-            -r win-x64 ^
-            -c Release ^
-            -o publish ^
-            -p:PublishSingleFile=true ^
-            -p:PublishTrimmed=false ^
-            -p:TrimMode=link ^
-            -p:IncludeAllContentForSelfExtract=false ^
-            -p:DebugType=None ^
-            -p:DebugSymbols=false ^
-            --self-contained false
-
-          if exist "publish\*.pdb" del /q "publish\*.pdb"
-
-      - name: Generate tag name
-        id: tag
+      # ---------------------------------------------
+      # Generate version + tag
+      # ---------------------------------------------
+      - name: Generate version
+        id: version
         shell: pwsh
         run: |
           $date = Get-Date -Format "yyyy-MM-dd"
-          $tag = "v.$date.r${{ github.run_number }}"
-          echo "tag=$tag" >> $env:GITHUB_OUTPUT
+          $run = "${{ github.run_number }}"
+          $version = "v.$date.r$run"
 
+          echo "VERSION=$version" >> $env:GITHUB_ENV
+          echo "version=$version" >> $env:GITHUB_OUTPUT
+
+      # ---------------------------------------------
+      # Restore dependencies
+      # ---------------------------------------------
+      - name: Restore dependencies
+        run: dotnet restore
+
+      # ---------------------------------------------
+      # Build & publish (your existing logic)
+      # ---------------------------------------------
+      - name: Publish application
+        shell: pwsh
+        run: |
+          dotnet publish "BPSR-ZDPS/BPSR-ZDPS.csproj" `
+            -r win-x64 `
+            -c Release `
+            -o ./publish `
+            -p:PublishSingleFile=true `
+            -p:PublishTrimmed=false `
+            -p:TrimMode=link `
+            -p:IncludeAllContentForSelfExtract=false `
+            -p:DebugType=None `
+            -p:DebugSymbols=false `
+            --self-contained false
+
+          if (Test-Path "publish\*.pdb") {
+            Remove-Item "publish\*.pdb" -Force
+          }
+
+      # ---------------------------------------------
+      # Zip output
+      # ---------------------------------------------
+      - name: Create ZIP package
+        shell: pwsh
+        run: |
+          Compress-Archive `
+            -Path publish\* `
+            -DestinationPath "ZDPS-${{ env.VERSION }}-win-x64.zip"
+
+      # ---------------------------------------------
+      # Upload workflow artifact (optional but useful)
+      # ---------------------------------------------
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ZDPS-${{ env.VERSION }}
+          path: ZDPS-${{ env.VERSION }}-win-x64.zip
+
+      # ---------------------------------------------
+      # Create GitHub Release + tag automatically
+      # ---------------------------------------------
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ steps.tag.outputs.tag }}
-          name: Release ${{ steps.tag.outputs.tag }}
+          tag_name: ${{ env.VERSION }}
+          name: ZDPS ${{ env.VERSION }}
           body: |
-            Automated release for **BPSR-ZDPS**
+            ## BPSR ZDPS Release
 
-            - Commit: `${{ github.sha }}`
-            - Branch: `${{ github.ref_name }}`
-            - Build: `${{ github.run_number }}`
+            **Version:** `${{ env.VERSION }}`
+            **Platform:** Windows x64  
+            **Build:** GitHub Actions
+
+            ### Changes
+            - Automated build & release
+            - Single-file .NET 8 publish
+            - No debug symbols
 
           files: |
-            publish/**
+            ZDPS-${{ env.VERSION }}-win-x64.zip
