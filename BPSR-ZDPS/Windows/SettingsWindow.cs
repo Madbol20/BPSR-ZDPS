@@ -72,6 +72,8 @@ namespace BPSR_ZDPS.Windows
         static bool checkForZDPSUpdatesOnStartup;
         static string latestZDPSVersionCheckURL;
 
+        static bool lowPerformanceMode;
+
         // External Settings
         static bool externalBPTimerEnabled;
         static bool externalBPTimerIncludeCharacterId;
@@ -765,6 +767,18 @@ namespace BPSR_ZDPS.Windows
                         ImGui.EndDisabled();
                         ImGui.Unindent();
 
+                        ImGui.SeparatorText("Low Performance Mode");
+
+                        ImGui.AlignTextToFramePadding();
+                        ImGui.Text("Low Performance Mode: ");
+                        ImGui.SameLine();
+                        ImGui.Checkbox("##LowPerformanceMode", ref lowPerformanceMode);
+                        ImGui.Indent();
+                        ImGui.BeginDisabled(true);
+                        ImGui.TextWrapped("When enabled, will force ZDPS to run at a lower rate, potentially causing stuttering UI when moving windows. Only turn this on if you experience Very High CPU usage from ZDPS.");
+                        ImGui.EndDisabled();
+                        ImGui.Unindent();
+
                         ImGui.EndChild();
                         ImGui.EndTabItem();
                     }
@@ -1349,6 +1363,8 @@ namespace BPSR_ZDPS.Windows
 
             logToFile = Settings.Instance.LogToFile;
 
+            lowPerformanceMode = Settings.Instance.LowPerformanceMode;
+
             // External
             externalBPTimerEnabled = Settings.Instance.External.BPTimerSettings.ExternalBPTimerEnabled;
             externalBPTimerIncludeCharacterId = Settings.Instance.External.BPTimerSettings.ExternalBPTimerIncludeCharacterId;
@@ -1427,6 +1443,8 @@ namespace BPSR_ZDPS.Windows
             Settings.Instance.WindowSettings = (WindowSettings)windowSettings.Clone();
 
             Settings.Instance.LogToFile = logToFile;
+
+            Settings.Instance.LowPerformanceMode = lowPerformanceMode;
 
             // External
             Settings.Instance.External.BPTimerSettings.ExternalBPTimerEnabled = externalBPTimerEnabled;

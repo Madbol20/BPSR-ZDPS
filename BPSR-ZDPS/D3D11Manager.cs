@@ -105,13 +105,16 @@ namespace BPSR_ZDPS
             IDXGIFactory.CreateSwapChainForHwnd((IUnknown*)Device.Handle, Hwnd, &desc, &fullscreenDesc, (IDXGIOutput*)null, &swapChain.Handle);
             // IDXGIFactory.MakeWindowAssociation(Hwnd, 1 << 0);
 
-            // This mostly removes the render/input lag without needing to increase refresh rate
-            //ComPtr<IDXGIDevice1> dxgiDevice;
-            //Device.QueryInterface(out dxgiDevice);
-            //if (dxgiDevice.Handle != null)
-            //{
-            //    dxgiDevice.SetMaximumFrameLatency(1);
-            //}
+            if (BPSR_ZDPS.DataTypes.Settings.Instance.LowPerformanceMode)
+            {
+                // This mostly removes the render/input lag without needing to increase refresh rate
+                ComPtr<IDXGIDevice1> dxgiDevice;
+                Device.QueryInterface(out dxgiDevice);
+                if (dxgiDevice.Handle != null)
+                {
+                    dxgiDevice.SetMaximumFrameLatency(1);
+                }
+            }
 
             this.swapChain = swapChain;
             swapChainDesc = desc;

@@ -46,7 +46,7 @@ namespace BPSR_ZDPS.Windows
 
         private static void ThreatTracker_EncounterEndFinal(EncounterEndFinalData e)
         {
-            EncounterManager.Current.EntityThreatListUpdated -= ThreatTracker_Entity_ThreatListUpdated;
+            e.Encounter.EntityThreatListUpdated -= ThreatTracker_Entity_ThreatListUpdated;
             System.Diagnostics.Debug.WriteLine("ThreatTracker_EncounterEndFinal");
         }
 

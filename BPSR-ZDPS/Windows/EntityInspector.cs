@@ -45,6 +45,7 @@ namespace BPSR_ZDPS.Windows
             SkillsDamage,
             SkillsHealing,
             SkillsTaken,
+            EntityTaken,
             Attributes,
             Buffs,
             Graphs,
@@ -287,6 +288,7 @@ namespace BPSR_ZDPS.Windows
                             valueTotalPerSecondLabel = "Total HPS:";
                             break;
                         case ETableFilterMode.SkillsTaken:
+                        case ETableFilterMode.EntityTaken:
                             combatStats = LoadedEntity.TakenStats;
                             valueTotalLabel = "Total Taken:";
                             valueExtraTotalLabel = "Total Shield:";
@@ -320,7 +322,7 @@ namespace BPSR_ZDPS.Windows
                             ImGui.TextUnformatted($"{valueExtraTotalLabel} {Utils.NumberToShorthand(LoadedEntity.TotalOverhealing)}");
                             ImGui.SetItemTooltip($"{LoadedEntity.TotalOverhealing:N0}");
                         }
-                        else if (TableFilterMode == ETableFilterMode.SkillsTaken)
+                        else if (TableFilterMode == ETableFilterMode.SkillsTaken || TableFilterMode == ETableFilterMode.EntityTaken)
                         {
                             ImGui.TextUnformatted($"Total Shield: {Utils.NumberToShorthand(LoadedEntity.TotalShield)}");
                             ImGui.SetItemTooltip($"{LoadedEntity.TotalShield:N0}");
@@ -335,7 +337,7 @@ namespace BPSR_ZDPS.Windows
                         {
                             ImGui.TextUnformatted($"Total Immunes: {combatStats.ImmuneCount}");
                         }
-                        else if (TableFilterMode == ETableFilterMode.SkillsTaken)
+                        else if (TableFilterMode == ETableFilterMode.SkillsTaken || TableFilterMode == ETableFilterMode.EntityTaken)
                         {
                             ImGui.TextUnformatted($"Total Immunes: {combatStats.ImmuneCount}");
                         }
@@ -372,7 +374,7 @@ namespace BPSR_ZDPS.Windows
 
                 ImGui.Separator();
 
-                string[] FilterButtons = { "Damage", "Healing", "Taken", "Attributes", "Buffs", "Graphs", "Debug" };
+                string[] FilterButtons = { "Damage", "Healing", "Taken", "Taken By Entity", "Attributes", "Buffs", "Graphs", "Debug" };
 
                 for (int filerBtnIdx = 0; filerBtnIdx < FilterButtons.Length; filerBtnIdx++)
                 {
@@ -596,6 +598,100 @@ namespace BPSR_ZDPS.Windows
                                 ImGui.TextUnformatted($"{stat.Value.KillCount}");
                             }
                         }
+
+                        ImGui.EndTable();
+                    }
+
+                    ImGui.PopStyleVar();
+                }
+                else if (TableFilterMode == ETableFilterMode.EntityTaken)
+                {
+                    ImGui.PushStyleVar(ImGuiStyleVar.CellPadding, new Vector2(8f, ImGui.GetStyle().CellPadding.Y));
+
+                    if (ImGui.BeginTable("##TakenByEntityTable", 9, ImGuiTableFlags.ScrollY | ImGuiTableFlags.SizingFixedFit))
+                    {
+                        var entityGroupedSkills = LoadedEntity.TakenStats.SkillSnapshots.AsValueEnumerable().GroupBy(x => x.OtherUUID);
+                        var interactedEntities = LoadedEntity.InteractedEntities.Where(x => x.Value.DidTaken && x.Value.Taken.HitCount > 0).OrderByDescending(x => x.Value.Taken.TotalValue);
+
+                        ImGui.TableSetupColumn("#");
+                        ImGui.TableSetupColumn("UID");
+                        ImGui.TableSetupColumn("Entity Name", ImGuiTableColumnFlags.WidthStretch, 100f);
+                        ImGui.TableSetupColumn("Profession");
+                        ImGui.TableSetupColumn("Damage");
+                        ImGui.TableSetupColumn("Total DPS");
+                        ImGui.TableSetupColumn("Hit Count");
+                        ImGui.TableSetupColumn("Crit Rate");
+                        ImGui.TableSetupColumn("Avg Per Hit");
+
+                        ImGui.TableHeadersRow();
+
+                        //ImGui.PushStyleVar(ImGuiStyleVar.CellPadding, new Vector2(ImGui.GetStyle().CellPadding.X, ImGui.GetStyle().CellPadding.Y + 2));
+
+                        long idx = 0;
+                        var startTime = LoadedEncounterStartTime?.ToUniversalTime() ?? LoadedEntity.TakenStats.StartTime;
+                        var endTime = LoadedEntity.TakenStats.EndTime;
+                        var duration = endTime - startTime;
+                        foreach (var entity in interactedEntities)
+                        {
+                            ImGui.TableNextRow();
+                            ImGui.TableNextColumn();
+
+                            string profession = "";
+                            if (entity.Value.SubProfessionId > 0)
+                            {
+                                profession = Professions.GetSubProfessionNameFromId(entity.Value.SubProfessionId);
+                            }
+                            else if (entity.Value.ProfessionId > 0)
+                            {
+                                profession = Professions.GetProfessionNameFromId(entity.Value.ProfessionId);
+                            }
+                            if (!string.IsNullOrEmpty(profession))
+                            {
+                                var color = Professions.ProfessionColors(profession);
+                                color = color - new Vector4(0, 0, 0, 0.50f);
+
+                                ImGui.PushStyleColor(ImGuiCol.Header, color);
+                            }
+
+                            if (ImGui.Selectable($"{idx + 1}##RankNum_{idx}", true, ImGuiSelectableFlags.SpanAllColumns))
+                            {
+
+                            }
+
+                            if (!string.IsNullOrEmpty(profession))
+                            {
+                                ImGui.PopStyleColor();
+                            }
+
+                            ImGui.TableNextColumn();
+                            ImGui.TextUnformatted($"{entity.Value.UID}");
+
+                            ImGui.TableNextColumn();
+                            ImGui.TextUnformatted(entity.Value.Name);
+
+                            ImGui.TableNextColumn();
+                            ImGui.TextUnformatted(profession);
+
+                            ImGui.TableNextColumn();
+                            var totalDmgContribution = Math.Round(((double)entity.Value.Taken.TotalValue / (double)LoadedEntity.TakenStats.ValueTotal) * 100.0, 0);
+                            ImGui.TextUnformatted($"{Utils.NumberToShorthand(entity.Value.Taken.TotalValue)} ({totalDmgContribution}%)");
+
+                            ImGui.TableNextColumn();
+                            ImGui.TextUnformatted($"{Utils.NumberToShorthand(entity.Value.Taken.TotalValue / duration.Value.TotalSeconds)}");
+
+                            ImGui.TableNextColumn();
+                            ImGui.TextUnformatted($"{Utils.NumberToShorthand(entity.Value.Taken.HitCount)}");
+
+                            ImGui.TableNextColumn();
+                            ImGui.TextUnformatted($"{Math.Round(((double)entity.Value.Taken.CritCount / (double)entity.Value.Taken.HitCount) * 100.0, 0)}%");
+
+                            ImGui.TableNextColumn();
+                            ImGui.TextUnformatted($"{Utils.NumberToShorthand((double)entity.Value.Taken.TotalValue / (double)entity.Value.Taken.HitCount)}");
+
+                            idx++;
+                        }
+
+                        //ImGui.PopStyleVar();
 
                         ImGui.EndTable();
                     }

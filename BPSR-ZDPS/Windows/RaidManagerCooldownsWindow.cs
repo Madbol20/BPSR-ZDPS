@@ -65,7 +65,7 @@ namespace BPSR_ZDPS.Windows
         private static void RaidManager_EncounterEndFinal(EncounterEndFinalData e)
         {
             HasBoundEvents = false;
-            EncounterManager.Current.SkillActivated -= RaidManager_Entity_SkillActivated;
+            e.Encounter.SkillActivated -= RaidManager_Entity_SkillActivated;
             System.Diagnostics.Debug.WriteLine("RaidManager_EncounterEndFinal");
         }
 
@@ -137,6 +137,14 @@ namespace BPSR_ZDPS.Windows
                     {
                         IsPinned = true;
                         Utils.SetWindowTopmost();
+                        Utils.SetWindowOpacity(windowSettings.Opacity * 0.01f);
+                        LastPinnedOpacity = windowSettings.Opacity;
+                    }
+                }
+                else if (RunOnceDelayed >= 2)
+                {
+                    if (windowSettings.TopMost && LastPinnedOpacity != windowSettings.Opacity)
+                    {
                         Utils.SetWindowOpacity(windowSettings.Opacity * 0.01f);
                         LastPinnedOpacity = windowSettings.Opacity;
                     }
@@ -572,11 +580,6 @@ namespace BPSR_ZDPS.Windows
                         windowSettings.TopMost = false;
                         IsPinned = true;
                     }
-                }
-                if (windowSettings.TopMost && LastPinnedOpacity != windowSettings.Opacity)
-                {
-                    Utils.SetWindowOpacity(windowSettings.Opacity * 0.01f);
-                    LastPinnedOpacity = windowSettings.Opacity;
                 }
                 ImGui.PopStyleColor();
                 ImGui.PopFont();

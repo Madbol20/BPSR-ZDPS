@@ -88,6 +88,12 @@ namespace BPSR_ZDPS
             var glfwVidMode = GLFW.GetVideoMode(glfwMonitor);
             GLFW.SetWindowPos(window, (glfwVidMode.Width - windowWidth) / 2, (glfwVidMode.Height - windowHeight) / 2);
 
+            Log.Debug($"Primary Monitor Refresh Rate = {glfwVidMode.RefreshRate}hz");
+            if (Settings.Instance.LowPerformanceMode)
+            {
+                Log.Debug($"Low Performance Mode is Enabled");
+            }
+
             // TODO: Do we even actually need this if we use only imgui windows?
             //GLFW.ShowWindow(window);
 
@@ -174,11 +180,17 @@ namespace BPSR_ZDPS
                 //var isMouseDragging = ImGui.IsMouseDragging(ImGuiMouseButton.Left);
                 //GLFW.SwapInterval(isMouseDragging ? 0 : 1);
 
+                // Note: This check is for the GLFW base window, not the 'MainWindow' or anything else
                 var isMinimized = GLFW.GetWindowAttrib(window, GLFW.GLFW_ICONIFIED);
                 if (isMinimized >= 1)
                 {
                     System.Threading.Thread.Sleep(10);
                     continue;
+                }
+
+                if (Settings.Instance.LowPerformanceMode)
+                {
+                    System.Threading.Thread.Sleep(10);
                 }
 
                 ImGuiImplD3D11.NewFrame();
@@ -347,6 +359,11 @@ namespace BPSR_ZDPS
             res = ff.BindToImGui(18.0f, true);
             ff.Dispose();
 
+            // Korean character supporting font
+            ff = new FontFile("BPSR_ZDPS.Fonts.NotoSansKR-Regular.ttf", new GlyphRange(0x4E00, 0x9FFF));
+            res = ff.BindToImGui(18.0f, true);
+            ff.Dispose();
+
             // Setting Segoe to be the default application font (though the other fonts will be used if their glyphs are required)
             ImGui.AddFontDefault(HelperMethods.Fonts["Segoe"].ContainerAtlas);
 
@@ -379,6 +396,11 @@ namespace BPSR_ZDPS
 
             // Chinese Traditional character supporting monospace font
             ff = new FontFile("BPSR_ZDPS.Fonts.CascadiaNextSC.wght.ttf");
+            res = ff.BindToImGui(18.0f, true);
+            ff.Dispose();
+
+            // Korean character supporting monospace font
+            ff = new FontFile("BPSR_ZDPS.Fonts.NanumGothicCoding.ttf");
             res = ff.BindToImGui(18.0f, true);
             ff.Dispose();
         }

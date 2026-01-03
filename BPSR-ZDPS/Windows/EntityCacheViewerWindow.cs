@@ -101,6 +101,14 @@ namespace BPSR_ZDPS
                         LastPinnedOpacity = windowSettings.Opacity;
                     }
                 }
+                else if (RunOnceDelayed >= 2)
+                {
+                    if (windowSettings.TopMost && LastPinnedOpacity != windowSettings.Opacity)
+                    {
+                        Utils.SetWindowOpacity(windowSettings.Opacity * 0.01f);
+                        LastPinnedOpacity = windowSettings.Opacity;
+                    }
+                }
 
                 DrawMenuBar();
 
@@ -178,11 +186,6 @@ namespace BPSR_ZDPS
                         windowSettings.TopMost = false;
                         IsPinned = false;
                     }
-                }
-                if (windowSettings.TopMost && LastPinnedOpacity != windowSettings.Opacity)
-                {
-                    Utils.SetWindowOpacity(windowSettings.Opacity * 0.01f);
-                    LastPinnedOpacity = windowSettings.Opacity;
                 }
                 ImGui.PopStyleColor();
                 ImGui.PopFont();

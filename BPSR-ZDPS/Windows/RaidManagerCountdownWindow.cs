@@ -156,7 +156,7 @@ namespace BPSR_ZDPS.Windows
                         NewCountdownWindowLocation = null;
                     }
 
-                    if (ImGui.Begin("Countdown", ImGuiWindowFlags.NoCollapse | ImGuiWindowFlags.NoDocking | ImGuiWindowFlags.NoTitleBar | ImGuiWindowFlags.NoResize | ImGuiWindowFlags.NoMove | ImGuiWindowFlags.NoBackground | ImGuiWindowFlags.NoInputs))
+                    if (ImGui.Begin("Countdown", ImGuiWindowFlags.NoCollapse | ImGuiWindowFlags.NoDocking | ImGuiWindowFlags.NoTitleBar | ImGuiWindowFlags.NoResize | ImGuiWindowFlags.NoMove | ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoBackground | ImGuiWindowFlags.NoInputs))
                     {
                         ImGui.PushStyleColor(ImGuiCol.ChildBg, new Vector4(0, 0, 0, 0.0f));
                         if (ImGui.BeginChild("##CountdownChild", new Vector2(0, 0), ImGuiWindowFlags.NoInputs))
@@ -377,7 +377,7 @@ namespace BPSR_ZDPS.Windows
                     NewCountdownWindowLocation = null;
                 }
 
-                if (ImGui.Begin("Countdown - Edit Position##CountdownPositionEditor", ImGuiWindowFlags.NoCollapse | ImGuiWindowFlags.NoDocking | ImGuiWindowFlags.NoTitleBar | ImGuiWindowFlags.NoResize))
+                if (ImGui.Begin("Countdown - Edit Position##CountdownPositionEditor", ImGuiWindowFlags.NoCollapse | ImGuiWindowFlags.NoDocking | ImGuiWindowFlags.NoTitleBar | ImGuiWindowFlags.NoResize | ImGuiWindowFlags.NoScrollbar))
                 {
                     ImGui.TextAligned(0.5f, -1, "Countdown - Edit Position");
                     ImGui.SetCursorPos(new(0));

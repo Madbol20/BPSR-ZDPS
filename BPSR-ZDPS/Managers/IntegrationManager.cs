@@ -18,24 +18,24 @@ namespace BPSR_ZDPS
 
         public static void InitBindings()
         {
+            Log.Information("IntegrationManager InitBindings");
+
             EncounterManager.EncounterEndFinal += EncounterManager_EncounterEndFinal;
 
             BPTimerManager.InitializeBindings();
-
-            Log.Information("IntegrationManager InitBindings");
         }
 
         private static void EncounterManager_EncounterEndFinal(EncounterEndFinalData e)
         {
             // Hold onto a reference for the Encounter as once we enter the task it will no longer be the current one and may already be moved into the database
-            var encounter = EncounterManager.Current;
+            var encounter = e.Encounter;
 
-            Log.Information($"IntegrationManager EncounterManager_EncounterEndFinal [Reason = {e.Reason}]");
+            Log.Information($"IntegrationManager EncounterManager_EncounterEndFinal [Reason = {e.Reason}] [BattleId {e.BattleId}] [EncounterId {e.EncounterId}]");
 
             // Only care about encounters with actual data in them
             if (!encounter.HasStatsBeenRecorded())
             {
-                Log.Debug($"Encounter has no recorded stats, stopping Report");
+                Log.Debug($"Encounter {encounter.EncounterId} has no recorded stats, stopping Report");
                 return;
             }
 
@@ -54,7 +54,7 @@ namespace BPSR_ZDPS
                     var lastBSMDungeonState = BattleStateMachine.DungeonStateHistory.Last();
                     if (lastBSMDungeonState.Key != EDungeonState.DungeonStateNull)
                     {
-                        Log.Debug($"Current.DungeonState == EDungeonState.DungeonStateNull but BattleStateMachine.DungeonStateHistory reported it to actually be {lastBSMDungeonState}. Avoiding invalid Open World exit state.");
+                        Log.Debug($"Encounter DungeonState == EDungeonState.DungeonStateNull but BattleStateMachine.DungeonStateHistory reported it to actually be {lastBSMDungeonState}. Avoiding invalid Open World exit state.");
                     }
                     else
                     {
@@ -113,7 +113,7 @@ namespace BPSR_ZDPS
                 {
                     if (encounter == null)
                     {
-                        Log.Error($"IntegrationManager CreateReportImg had EncounterManager.Current == Null! This should not happen. Aborting the Report process.");
+                        Log.Error($"IntegrationManager CreateReportImg had Encounter == Null! This should not happen. Aborting the Report process.");
                         return;
                     }
 
@@ -168,7 +168,7 @@ namespace BPSR_ZDPS
             }
             else
             {
-                Log.Information($"IntegrationManager EncounterEndFinal did not detect a dead boss or wipe in Battle:{e.BattleId} Encounter: {e.EncounterId}.");
+                Log.Information($"IntegrationManager EncounterEndFinal did not detect a dead boss or wipe in Battle: {e.BattleId} Encounter: {e.EncounterId}.");
                 Log.Debug($"BossName:{encounter.BossName} BossUUID:{encounter.BossUUID}, BossHpPct:{encounter.BossHpPct}, IsWipe:{encounter.IsWipe}");
                 if (bossState != null)
                 {

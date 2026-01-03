@@ -174,7 +174,7 @@ namespace BPSR_ZDPS
                     AppState.HasBenchmarkBegun = false;
                     AppState.IsBenchmarkMode = false;
 
-                    var endData = new EncounterEndFinalData() { BattleId = EncounterManager.CurrentBattleId, EncounterId = (ulong)EncounterManager.Current.EncounterId, Reason = EncounterStartReason.BenchmarkEnd };
+                    var endData = new EncounterEndFinalData() { BattleId = EncounterManager.CurrentBattleId, EncounterId = (ulong)EncounterManager.Current.EncounterId, Reason = EncounterStartReason.BenchmarkEnd, Encounter = EncounterManager.Current };
                     SetDeferredEncounterEndFinalData(DateTime.Now, endData);
 
                     DeferredEncounterEndFinalTime = null;
@@ -211,5 +211,6 @@ namespace BPSR_ZDPS
         public ulong EncounterId;
         public int BattleId;
         public EncounterStartReason Reason;
+        public Encounter? Encounter;
     }
 }

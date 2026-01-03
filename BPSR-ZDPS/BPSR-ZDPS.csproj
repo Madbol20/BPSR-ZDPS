@@ -20,6 +20,8 @@
     <None Remove="Fonts\CascadiaNextTC.wght.ttf" />
     <None Remove="Fonts\FAS.ttf" />
     <None Remove="Fonts\fot-seuratpron-m.otf" />
+    <None Remove="Fonts\NanumGothicCoding.ttf" />
+    <None Remove="Fonts\NotoSansKR-Regular.ttf" />
     <None Remove="Fonts\SourceHanSansSC-Regular.otf" />
     <None Remove="Resources\MainWindowIcon.png" />
   </ItemGroup>
@@ -35,6 +37,12 @@
     <EmbeddedResource Include="Fonts\CascadiaNextTC.wght.ttf" />
     <EmbeddedResource Include="Fonts\FAS.ttf" />
     <EmbeddedResource Include="Fonts\fot-seuratpron-m.otf" />
+    <EmbeddedResource Include="Fonts\NanumGothicCoding.ttf">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Fonts\NotoSansKR-Regular.ttf">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </EmbeddedResource>
     <EmbeddedResource Include="Fonts\SourceHanSansSC-Regular.otf" />
     <EmbeddedResource Include="Resources\MainWindowIcon.png" />
   </ItemGroup>

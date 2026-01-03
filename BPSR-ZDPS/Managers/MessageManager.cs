@@ -784,6 +784,7 @@ namespace BPSR_ZDPS
                 //System.Diagnostics.Debug.WriteLine($"delta.TempAttrs.Attrs.count = {delta.TempAttrs.Attrs.Count}");
             }
 
+            List<int> EventHandledBuffs = new();
             if (delta.BuffEffect != null)
             {
                 //System.Diagnostics.Debug.WriteLine($"delta.BuffEffect={delta.BuffEffect.BuffEffects.Count}");
@@ -793,9 +794,15 @@ namespace BPSR_ZDPS
                     // Shield buffs appear to use Type == BuffEventAddTo and BuffEventRemove
                     var buffEffect = delta.BuffEffect.BuffEffects[buffIdx];
                     //System.Diagnostics.Debug.WriteLine($"BuffEffect[{buffIdx}] = {buffEffect}");
+                    EventHandledBuffs.Add(buffEffect.BuffUuid);
+                    //System.Diagnostics.Debug.WriteLine($"BuffEffect: {buffEffect}");
+                    // When a buff effect event occurs, a specific buff is being modified by the BuffUuid indicator.
+                    // However, the same payload can contain other buffs which are being updated at the same time, such as Layer modifications without their own event.
 
                     if (delta.BuffInfos != null)
                     {
+                        //System.Diagnostics.Debug.WriteLine($"BuffInfos: {delta.BuffInfos}");
+
                         var matchInfo = delta.BuffInfos.BuffInfos.AsValueEnumerable().Where(x => x.BuffUuid == buffEffect.BuffUuid);
                         if (matchInfo.Any())
                         {
@@ -808,6 +815,22 @@ namespace BPSR_ZDPS
                         // Most commonly appears to include EBuffEventType.BuffEventRemove, EBuffEventType.BuffEventAddTo, EBuffEventType.BuffEventRemoveLayer
 
                         EncounterManager.Current.NotifyBuffEvent(targetUuid, buffEffect.Type, buffEffect.BuffUuid, 0, 0, 0, 0, 0, 0, extraData);
+                    }
+                }
+            }
+            else
+            {
+                if (delta.BuffInfos != null && delta.BuffInfos.BuffInfos != null)
+                {
+                    //System.Diagnostics.Debug.WriteLine($"Updating {delta.BuffInfos.BuffInfos.Count} Unhandled Buffs!");
+                    //System.Diagnostics.Debug.WriteLine($"BuffInfos: {delta.BuffInfos}");
+                    foreach (var buffInfo in delta.BuffInfos.BuffInfos)
+                    {
+                        if (!EventHandledBuffs.Contains(buffInfo.BuffUuid))
+                        {
+                            // There was a potential modification to this buff but it was not part of the actual event sent
+                            EncounterManager.Current.NotifyBuffEvent(targetUuid, EBuffEventType.BuffEventUnknown, buffInfo.BuffUuid, buffInfo.BaseId, buffInfo.Level, buffInfo.FireUuid, buffInfo.Layer, buffInfo.Duration, buffInfo.FightSourceInfo.SourceConfigId, extraData);
+                        }
                     }
                 }
             }
@@ -934,13 +957,13 @@ namespace BPSR_ZDPS
 
                 if (isHeal)
                 {
-                    EncounterManager.Current.AddHealing((isAttackerPlayer ? attackerUuid : 0), targetUuid, skillId, syncDamageInfo.OwnerLevel, damage, hpLessen, syncDamageInfo.Property, syncDamageInfo.Type, syncDamageInfo.DamageMode, isCrit, isLucky, isCauseLucky, isMiss, isDead, extraData);
+                    EncounterManager.Current.AddHealing((isAttackerPlayer ? attackerUuid : 0), targetUuid, skillId, syncDamageInfo.OwnerLevel, damage, hpLessen, syncDamageInfo.Property, syncDamageInfo.Type, syncDamageInfo.DamageMode, isCrit, isLucky, isCauseLucky, isMiss, isDead, syncDamageInfo.DamagePos, extraData);
                 }
                 else
                 {
-                    EncounterManager.Current.AddDamage(attackerUuid, targetUuid, skillId, syncDamageInfo.OwnerLevel, damage, hpLessen, syncDamageInfo.Property, syncDamageInfo.Type, syncDamageInfo.DamageMode, isCrit, isLucky, isCauseLucky, isMiss, isDead, extraData);
+                    EncounterManager.Current.AddDamage(attackerUuid, targetUuid, skillId, syncDamageInfo.OwnerLevel, damage, hpLessen, syncDamageInfo.Property, syncDamageInfo.Type, syncDamageInfo.DamageMode, isCrit, isLucky, isCauseLucky, isMiss, isDead, syncDamageInfo.DamagePos, extraData);
 
-                    EncounterManager.Current.AddTakenDamage(attackerUuid, targetUuid, skillId, syncDamageInfo.OwnerLevel, damage, hpLessen, syncDamageInfo.Property, syncDamageInfo.Type, syncDamageInfo.DamageMode, isCrit, isLucky, isCauseLucky, isMiss, isDead, extraData);
+                    EncounterManager.Current.AddTakenDamage(attackerUuid, targetUuid, skillId, syncDamageInfo.OwnerLevel, damage, hpLessen, syncDamageInfo.Property, syncDamageInfo.Type, syncDamageInfo.DamageMode, isCrit, isLucky, isCauseLucky, isMiss, isDead, syncDamageInfo.DamagePos, extraData);
                 }
             }
 

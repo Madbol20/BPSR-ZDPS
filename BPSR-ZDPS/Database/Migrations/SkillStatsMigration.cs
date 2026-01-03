@@ -80,17 +80,22 @@ namespace BPSR_ZDPS.Database.Migrations
                                     combatStats.SetName(skillStat.Value.Name);
                                     combatStats.SetSummonData(skillStat.Value.SummonUUID, skillStat.Value.TierLevel);
                                     combatStats.SetSkillType(skillType);
-                                    combatStats.AddData(snapshot.Value,
-                                            skillStat.Value.Level,
-                                            snapshot.IsCrit,
-                                            snapshot.IsLucky,
-                                            snapshot.Value,
-                                            snapshot.IsCauseLucky,
-                                            snapshot.DamageElement,
-                                            snapshot.DamageType,
-                                            snapshot.DamageMode,
-                                            snapshot.IsKill,
-                                            new BPSR_ZDPSLib.ExtraPacketData(snapshot.Timestamp.Value));
+                                    combatStats.AddData(0,
+                                        skillStat.Key,
+                                        skillStat.Value.Level,
+                                        snapshot.Value,
+                                        snapshot.IsCrit,
+                                        snapshot.IsLucky,
+                                        snapshot.Value,
+                                        snapshot.IsCauseLucky,
+                                        snapshot.DamageElement,
+                                        snapshot.DamageType,
+                                        snapshot.DamageMode,
+                                        snapshot.IsKill,
+                                        new Zproto.Vec3(),
+                                        null,
+                                        null,
+                                        new BPSR_ZDPSLib.ExtraPacketData(snapshot.Timestamp.Value));
 
                                     entity.SkillMetrics[skillStat.Key] = metrics;
                                 }

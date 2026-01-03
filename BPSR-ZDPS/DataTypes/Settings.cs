@@ -65,6 +65,8 @@ public class Settings
     // Settings specific to an individual window
     public WindowSettings WindowSettings { get; set; } = new();
 
+    public bool LowPerformanceMode { get; set; } = false;
+
     public uint HotkeysEncounterReset { get; set; }
     public uint HotkeysPinnedWindowClickthrough { get; set; }
 

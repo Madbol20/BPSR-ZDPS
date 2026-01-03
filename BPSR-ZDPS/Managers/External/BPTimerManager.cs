@@ -61,7 +61,7 @@ namespace BPSR_ZDPS.Managers.External
             if (IsEncounterBound)
             {
                 IsEncounterBound = false;
-                EncounterManager.Current.EntityHpUpdated -= BPTimerManager_EntityHpUpdated;
+                e.Encounter.EntityHpUpdated -= BPTimerManager_EntityHpUpdated;
             }
         }
 
