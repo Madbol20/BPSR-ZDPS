@@ -9,33 +9,12 @@ permissions:
   contents: write
 
 jobs:
-  build-and-release:
+  release:
     runs-on: windows-latest
-
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - rid: win-x64
-            arch: x64
-            self_contained: true
-            label: self-contained
-          - rid: win-x64
-            arch: x64
-            self_contained: false
-            label: framework-dependent
-          - rid: win-x86
-            arch: x86
-            self_contained: true
-            label: self-contained
-          - rid: win-x86
-            arch: x86
-            self_contained: false
-            label: framework-dependent
 
     steps:
       # -------------------------------------------------
-      # Checkout repository
+      # Checkout
       # -------------------------------------------------
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -60,63 +39,75 @@ jobs:
           $dateDotnet = Get-Date -Format "yyyy.MM.dd"
           $run = "${{ github.run_number }}"
 
-          $releaseVersion = "v.$dateTag.r$run"
-          $dotnetVersion = "$dateDotnet.$run"
-
-          echo "RELEASE_VERSION=$releaseVersion" >> $env:GITHUB_ENV
-          echo "DOTNET_VERSION=$dotnetVersion" >> $env:GITHUB_ENV
+          "RELEASE_VERSION=v.$dateTag.r$run" >> $env:GITHUB_ENV
+          "DOTNET_VERSION=$dateDotnet.$run" >> $env:GITHUB_ENV
 
       # -------------------------------------------------
-      # Restore dependencies
+      # Restore
       # -------------------------------------------------
       - name: Restore
         run: dotnet restore -p:Version=${{ env.DOTNET_VERSION }}
 
       # -------------------------------------------------
-      # Publish
+      # Publish ALL variants
       # -------------------------------------------------
-      - name: Publish (${{ matrix.rid }} / ${{ matrix.label }})
+      - name: Publish variants
         shell: pwsh
         run: |
-          $out = "publish/${{ matrix.rid }}-${{ matrix.label }}"
-          dotnet publish "BPSR-ZDPS/BPSR-ZDPS.csproj" `
-            -r ${{ matrix.rid }} `
-            -c Release `
-            -o $out `
-            -p:Version=${{ env.DOTNET_VERSION }} `
-            -p:PublishSingleFile=true `
-            -p:PublishTrimmed=false `
-            -p:DebugType=None `
-            -p:DebugSymbols=false `
-            --self-contained ${{ matrix.self_contained }}
+          $variants = @(
+            @{ rid = "win-x64"; self = $true;  label = "self-contained" },
+            @{ rid = "win-x64"; self = $false; label = "framework-dependent" },
+            @{ rid = "win-x86"; self = $true;  label = "self-contained" },
+            @{ rid = "win-x86"; self = $false; label = "framework-dependent" }
+          )
 
-          Get-ChildItem $out -Filter *.pdb -Recurse | Remove-Item -Force
+          foreach ($v in $variants) {
+            $out = "publish/$($v.rid)-$($v.label)"
+            Write-Host "Publishing $($v.rid) / $($v.label)"
+
+            dotnet publish "BPSR-ZDPS/BPSR-ZDPS.csproj" `
+              -r $v.rid `
+              -c Release `
+              -o $out `
+              -p:Version=${{ env.DOTNET_VERSION }} `
+              -p:PublishSingleFile=true `
+              -p:PublishTrimmed=false `
+              -p:DebugType=None `
+              -p:DebugSymbols=false `
+              --self-contained $v.self
+
+            Get-ChildItem $out -Filter *.pdb -Recurse | Remove-Item -Force
+          }
 
       # -------------------------------------------------
-      # Create ZIP
+      # Create ZIPs
       # -------------------------------------------------
-      - name: Create ZIP
+      - name: Create ZIPs
         shell: pwsh
         run: |
-          $zip = "ZDPS-${{ env.RELEASE_VERSION }}-${{ matrix.rid }}-${{ matrix.label }}.zip"
-          Compress-Archive `
-            -Path "publish/${{ matrix.rid }}-${{ matrix.label }}\*" `
-            -DestinationPath $zip
+          $zips = @()
+
+          Get-ChildItem publish -Directory | ForEach-Object {
+            $zip = "ZDPS-${{ env.RELEASE_VERSION }}-$($_.Name).zip"
+            Compress-Archive "$($_.FullName)\*" $zip
+            $zips += $zip
+          }
+
+          "ZIP_LIST=$($zips -join "`n")" >> $env:GITHUB_ENV
 
       # -------------------------------------------------
-      # Upload artifact
+      # Upload artifacts (optional)
       # -------------------------------------------------
-      - name: Upload artifact
+      - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: ZDPS-${{ env.RELEASE_VERSION }}-${{ matrix.rid }}-${{ matrix.label }}
-          path: ZDPS-${{ env.RELEASE_VERSION }}-${{ matrix.rid }}-${{ matrix.label }}.zip
+          name: ZDPS-${{ env.RELEASE_VERSION }}
+          path: ZDPS-${{ env.RELEASE_VERSION }}-*.zip
 
       # -------------------------------------------------
-      # Create GitHub Release (once)
+      # Create GitHub Release (ONE time)
       # -------------------------------------------------
       - name: Create GitHub Release
-        if: matrix.rid == 'win-x64' && matrix.self_contained == true
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ env.RELEASE_VERSION }}
@@ -127,11 +118,10 @@ jobs:
             **Version:** `${{ env.RELEASE_VERSION }}`
             **Dotnet Version:** `${{ env.DOTNET_VERSION }}`
 
-            ### Builds Included
+            ### Included Builds
             - Windows x64 / x86
             - Self-contained & Framework-dependent
             - Single-file publish
-            - Debug symbols removed
 
             ### Notes
             - Self-contained builds include .NET runtime
