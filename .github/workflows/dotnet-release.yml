@@ -12,6 +12,27 @@ jobs:
   build-and-release:
     runs-on: windows-latest
 
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - rid: win-x64
+            arch: x64
+            self_contained: true
+            label: self-contained
+          - rid: win-x64
+            arch: x64
+            self_contained: false
+            label: framework-dependent
+          - rid: win-x86
+            arch: x86
+            self_contained: true
+            label: self-contained
+          - rid: win-x86
+            arch: x86
+            self_contained: false
+            label: framework-dependent
+
     steps:
       # -------------------------------------------------
       # Checkout repository
@@ -46,57 +67,56 @@ jobs:
           echo "DOTNET_VERSION=$dotnetVersion" >> $env:GITHUB_ENV
 
       # -------------------------------------------------
-      # Restore dependencies (numeric version ONLY)
+      # Restore dependencies
       # -------------------------------------------------
-      - name: Restore dependencies
+      - name: Restore
         run: dotnet restore -p:Version=${{ env.DOTNET_VERSION }}
 
       # -------------------------------------------------
-      # Publish application
+      # Publish
       # -------------------------------------------------
-      - name: Publish application
+      - name: Publish (${{ matrix.rid }} / ${{ matrix.label }})
         shell: pwsh
         run: |
+          $out = "publish/${{ matrix.rid }}-${{ matrix.label }}"
           dotnet publish "BPSR-ZDPS/BPSR-ZDPS.csproj" `
-            -r win-x64 `
+            -r ${{ matrix.rid }} `
             -c Release `
-            -o ./publish `
+            -o $out `
             -p:Version=${{ env.DOTNET_VERSION }} `
             -p:PublishSingleFile=true `
             -p:PublishTrimmed=false `
-            -p:TrimMode=link `
-            -p:IncludeAllContentForSelfExtract=false `
             -p:DebugType=None `
             -p:DebugSymbols=false `
-            --self-contained false
+            --self-contained ${{ matrix.self_contained }}
 
-          if (Test-Path "publish\*.pdb") {
-            Remove-Item "publish\*.pdb" -Force
-          }
+          Get-ChildItem $out -Filter *.pdb -Recurse | Remove-Item -Force
 
       # -------------------------------------------------
-      # Create ZIP package
+      # Create ZIP
       # -------------------------------------------------
       - name: Create ZIP
         shell: pwsh
         run: |
+          $zip = "ZDPS-${{ env.RELEASE_VERSION }}-${{ matrix.rid }}-${{ matrix.label }}.zip"
           Compress-Archive `
-            -Path publish\* `
-            -DestinationPath "ZDPS-${{ env.RELEASE_VERSION }}-win-x64.zip"
+            -Path "publish/${{ matrix.rid }}-${{ matrix.label }}\*" `
+            -DestinationPath $zip
 
       # -------------------------------------------------
-      # Upload artifact (workflow storage)
+      # Upload artifact
       # -------------------------------------------------
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: ZDPS-${{ env.RELEASE_VERSION }}
-          path: ZDPS-${{ env.RELEASE_VERSION }}-win-x64.zip
+          name: ZDPS-${{ env.RELEASE_VERSION }}-${{ matrix.rid }}-${{ matrix.label }}
+          path: ZDPS-${{ env.RELEASE_VERSION }}-${{ matrix.rid }}-${{ matrix.label }}.zip
 
       # -------------------------------------------------
-      # Create GitHub Release (auto tag)
+      # Create GitHub Release (once)
       # -------------------------------------------------
       - name: Create GitHub Release
+        if: matrix.rid == 'win-x64' && matrix.self_contained == true
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ env.RELEASE_VERSION }}
@@ -106,12 +126,18 @@ jobs:
 
             **Version:** `${{ env.RELEASE_VERSION }}`
             **Dotnet Version:** `${{ env.DOTNET_VERSION }}`
-            **Platform:** Windows x64
-            **Build:** GitHub Actions
+
+            ### Builds Included
+            - Windows x64 / x86
+            - Self-contained & Framework-dependent
+            - Single-file publish
+            - Debug symbols removed
 
             ### Notes
-            - Automatic versioning
-            - Single-file .NET publish
-            - Debug symbols removed
+            - Self-contained builds include .NET runtime
+            - Framework-dependent builds require .NET 8+
           files: |
-            ZDPS-${{ env.RELEASE_VERSION }}-win-x64.zip
+            ZDPS-${{ env.RELEASE_VERSION }}-win-x64-self-contained.zip
+            ZDPS-${{ env.RELEASE_VERSION }}-win-x64-framework-dependent.zip
+            ZDPS-${{ env.RELEASE_VERSION }}-win-x86-self-contained.zip
+            ZDPS-${{ env.RELEASE_VERSION }}-win-x86-framework-dependent.zip
