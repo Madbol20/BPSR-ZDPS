@@ -93,7 +93,11 @@ jobs:
             $zips += $zip
           }
 
-          "ZIP_LIST=$($zips -join "`n")" >> $env:GITHUB_ENV
+          $delimiter = "EOF"
+          "ZIP_LIST<<$delimiter" >> $env:GITHUB_ENV
+          ($zips -join "`n") >> $env:GITHUB_ENV
+          $delimiter >> $env:GITHUB_ENV
+
 
       # -------------------------------------------------
       # Upload artifacts (optional)
